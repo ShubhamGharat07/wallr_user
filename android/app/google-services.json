@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "853044061342",
+    "project_id": "wallr-f7607",
+    "storage_bucket": "wallr-f7607.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853044061342:android:6728cfe043cf21ab8a078f",
+        "android_client_info": {
+          "package_name": "com.example.wallr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdoaRITdwnKt-ibCPQm4XCPG6OcbLhsoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
