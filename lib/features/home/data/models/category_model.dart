@@ -22,7 +22,9 @@ class CategoryModel extends CategoryEntity {
     super.isPremium,
   });
 
-  factory CategoryModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory CategoryModel.fromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data() ?? const <String, dynamic>{};
     return CategoryModel(
       id: doc.id,

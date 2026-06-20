@@ -11,8 +11,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetHomeFeedUseCase _getHomeFeed;
 
   HomeBloc({required GetHomeFeedUseCase getHomeFeed})
-      : _getHomeFeed = getHomeFeed,
-        super(const HomeInitial()) {
+    : _getHomeFeed = getHomeFeed,
+      super(const HomeInitial()) {
     on<HomeFeedRequested>(_onHomeFeedRequested);
     on<HomeFeedRefreshed>(_onHomeFeedRefreshed);
   }
@@ -41,16 +41,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
 
     final result = await _getHomeFeed(const NoParams());
-    result.fold(
-      (failure) {
-        // Refresh failed silently if we already had data on screen.
-        if (current is HomeLoaded) {
-          emit(current.copyWith(isRefreshing: false));
-        } else {
-          emit(HomeError(failure.message));
-        }
-      },
-      (feed) => emit(HomeLoaded(feed)),
-    );
+    result.fold((failure) {
+      // Refresh failed silently if we already had data on screen.
+      if (current is HomeLoaded) {
+        emit(current.copyWith(isRefreshing: false));
+      } else {
+        emit(HomeError(failure.message));
+      }
+    }, (feed) => emit(HomeLoaded(feed)));
   }
 }
