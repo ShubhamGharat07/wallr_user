@@ -50,28 +50,19 @@ class WallpaperCard extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                memCacheWidth: 400,
-                memCacheHeight: 600,
+                memCacheWidth: 600,
+                memCacheHeight: 900,
+                maxHeightDiskCache: 1000,
+                maxWidthDiskCache: 700,
                 placeholder: (_, __) => const AppShimmer(),
-                errorWidget: (_, __, ___) => _ErrorPlaceholder(),
+                errorWidget: (_, _, _) => _ErrorPlaceholder(),
+                useOldImageOnUrlChange: true,
               ),
 
               // ── Bottom gradient overlay ─────────────────────
               if (title != null || isPremium)
                 const Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Color(0xCC000000), // 80% black
-                        ],
-                        stops: [0.5, 1.0],
-                      ),
-                    ),
-                  ),
+                  child: _GradientOverlay(),
                 ),
 
               // ── Top-right: Resolution badge ─────────────────
@@ -97,8 +88,8 @@ class WallpaperCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.labelLg.copyWith(
                       color: Colors.white,
-                      shadows: [
-                        const Shadow(blurRadius: 8, color: Colors.black54),
+                      shadows: const [
+                        Shadow(blurRadius: 8, color: Colors.black54),
                       ],
                     ),
                   ),
@@ -122,6 +113,29 @@ class WallpaperCard extends StatelessWidget {
   }
 }
 
+// ─── Gradient Overlay ─────────────────────────────────────────────────────────
+
+class _GradientOverlay extends StatelessWidget {
+  const _GradientOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.4),
+          ],
+          stops: const [0.4, 1.0],
+        ),
+      ),
+    );
+  }
+}
+
 // ─── Resolution Badge ─────────────────────────────────────────────────────────
 
 class _ResolutionBadge extends StatelessWidget {
@@ -132,36 +146,42 @@ class _ResolutionBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-      child: BackdropFilter(
-        filter: ColorFilter.mode(
-          Colors.black.withOpacity(0.3),
-          BlendMode.darken,
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimensions.xs + 2,
+        vertical: 3.h,
+      ),
+      decoration: BoxDecoration(
+        color: isPremium
+            ? AppColors.primaryContainer.withValues(alpha: 0.25)
+            : Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
+        border: Border.all(
+          color: isPremium
+              ? AppColors.primaryContainer.withValues(alpha: 0.9)
+              : Colors.white.withValues(alpha: 0.4),
+          width: AppDimensions.borderThin,
         ),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppDimensions.xs + 2,
-            vertical: 3.h,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-            border: isPremium
-                ? Border.all(
-                    color: AppColors.primaryContainer.withOpacity(0.6),
-                    width: AppDimensions.borderThin,
-                  )
-                : null,
-          ),
-          child: Text(
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isPremium) ...[
+            Icon(
+              Icons.star_rounded,
+              size: 12.sp,
+              color: AppColors.primaryContainer,
+            ),
+            SizedBox(width: 4.w),
+          ],
+          Text(
             label,
             style: AppTextStyles.labelSm.copyWith(
               color: isPremium ? AppColors.primaryContainer : Colors.white,
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -183,10 +203,10 @@ class _GlassFavButton extends StatelessWidget {
         width: 32.w,
         height: 32.w,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             width: AppDimensions.borderThin,
           ),
         ),

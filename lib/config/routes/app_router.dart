@@ -80,6 +80,7 @@ import '../../features/home/presentation/pages/home_screen.dart';
 import '../../features/onboarding/presentation/pages/onboarding_screen.dart';
 import '../../features/profile/presentation/pages/profile.dart';
 import '../../features/search/presentation/pages/search.dart';
+import '../../features/splash/presentation/pages/splash_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_detail_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_preview_screen.dart';
 import 'route_names.dart';
@@ -87,9 +88,15 @@ import 'route_names.dart';
 /// WALLR — GoRouter config
 /// Routes are added here as each screen is built.
 final GoRouter appRouter = GoRouter(
-  initialLocation: RouteNames.onboarding,
+  initialLocation: RouteNames.splash,
   debugLogDiagnostics: true,
   routes: [
+    // ── Splash Screen (Entry Point) ──
+    GoRoute(
+      path: RouteNames.splash,
+      builder: (context, state) => const SplashScreen(),
+    ),
+
     GoRoute(
       path: RouteNames.onboarding,
       builder: (context, state) => const OnboardingScreen(),

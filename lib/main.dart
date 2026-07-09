@@ -22,15 +22,11 @@ Future<void> main() async {
 
   await initDependencies();
 
-  final prefs = await SharedPreferences.getInstance();
-
-  runApp(MyApp(prefs: prefs));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final SharedPreferences? prefs;
-
-  const MyApp({super.key, this.prefs});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +41,9 @@ class MyApp extends StatelessWidget {
               create: (_) => OnboardingCubit(
                 CompleteOnboardingUseCase(
                   OnboardingRepositoryImpl(
-                    OnboardingLocalDataSourceImpl(prefs),
+                    OnboardingLocalDataSourceImpl(
+                      sl<SharedPreferences>(),
+                    ),
                   ),
                 ),
               ),
@@ -63,3 +61,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

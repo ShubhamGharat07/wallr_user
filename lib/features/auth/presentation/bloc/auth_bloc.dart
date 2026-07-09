@@ -1,6 +1,7 @@
 // lib/features/auth/presentation/bloc/auth_bloc.dart
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/usecases/forgot_password_usecase.dart';
@@ -17,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithGoogleUseCase _signInWithGoogle;
   final ForgotPasswordUseCase _forgotPassword;
   final SignOutUseCase _signOut;
+  final SharedPreferences _prefs;
 
   AuthBloc({
     required SignInWithEmailUseCase signInWithEmail,
@@ -24,11 +26,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SignInWithGoogleUseCase signInWithGoogle,
     required ForgotPasswordUseCase forgotPassword,
     required SignOutUseCase signOut,
+    required SharedPreferences prefs,
   }) : _signInWithEmail = signInWithEmail,
        _signUpWithEmail = signUpWithEmail,
        _signInWithGoogle = signInWithGoogle,
        _forgotPassword = forgotPassword,
        _signOut = signOut,
+       _prefs = prefs,
        super(const AuthInitial()) {
     on<SignInWithEmailRequested>(_onSignInWithEmail);
     on<SignUpWithEmailRequested>(_onSignUpWithEmail);
@@ -47,7 +51,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     result.fold(
       (failure) => emit(AuthFailureState(failure.message)),
-      (user) => emit(AuthSuccess(user)),
+      (user) async {
+        // ✅ Session save kar
+        await _saveSession(user.email);
+        emit(AuthSuccess(user));
+      },
     );
   }
 
@@ -65,7 +73,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     result.fold(
       (failure) => emit(AuthFailureState(failure.message)),
-      (user) => emit(AuthSuccess(user)),
+      (user) async {
+        // ✅ Session save kar
+        await _saveSession(user.email);
+        emit(AuthSuccess(user));
+      },
     );
   }
 
@@ -77,7 +89,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _signInWithGoogle(const NoParams());
     result.fold(
       (failure) => emit(AuthFailureState(failure.message)),
-      (user) => emit(AuthSuccess(user)),
+      (user) async {
+        // ✅ Session save kar
+        await _saveSession(user.email);
+        emit(AuthSuccess(user));
+      },
     );
   }
 
@@ -100,7 +116,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _signOut(const NoParams());
     result.fold(
       (failure) => emit(AuthFailureState(failure.message)),
-      (_) => emit(const SignOutSuccess()),
+      (_) async {
+        // ✅ Session clear kar
+        await _clearSession();
+        emit(const SignOutSuccess());
+      },
     );
   }
+
+  /// 💾 Session save kar - jab user successful login karega
+  Future<void> _saveSession(String userEmail) async {
+    try {
+      // Generate unique session token (in production, Firebase auth token use kar)
+      final sessionToken = 'session_${DateTime.now().millisecondsSinceEpoch}';
+
+      await Future.wait([
+        _prefs.setString('session_token', sessionToken),
+        _prefs.setString('user_email', userEmail),
+        _prefs.setInt('login_time', DateTime.now().millisecondsSinceEpoch),
+      ]);
+    } catch (e) {
+      // Log error but don't break auth flow
+      print('Error saving session: $e');
+    }
+  }
+
+  /// 🧹 Session clear kar - jab user logout karega
+  Future<void> _clearSession() async {
+    try {
+      await Future.wait([
+        _prefs.remove('session_token'),
+        _prefs.remove('user_email'),
+        _prefs.remove('login_time'),
+      ]);
+    } catch (e) {
+      print('Error clearing session: $e');
+    }
+  }
 }
+

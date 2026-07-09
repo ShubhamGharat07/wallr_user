@@ -214,17 +214,24 @@ class _HeroImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      fit: BoxFit.cover,
-      placeholder: (_, __) => const AppShimmer(),
-      errorWidget: (_, __, ___) => Container(
-        color: AppColors.cardSurface,
-        child: Icon(
-          Icons.broken_image_outlined,
-          color: AppColors.navInactive,
-          size: AppDimensions.iconLg,
+    return RepaintBoundary(
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        memCacheWidth: 800,
+        memCacheHeight: 1400,
+        maxHeightDiskCache: 1600,
+        maxWidthDiskCache: 1000,
+        placeholder: (_, __) => const AppShimmer(),
+        errorWidget: (_, _, _) => Container(
+          color: AppColors.cardSurface,
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: AppColors.navInactive,
+            size: AppDimensions.iconLg,
+          ),
         ),
+        useOldImageOnUrlChange: true,
       ),
     );
   }
@@ -271,7 +278,7 @@ class _InfoPanel extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 28,
             offset: const Offset(0, -10),
           ),
@@ -287,19 +294,12 @@ class _InfoPanel extends StatelessWidget {
         ),
         children: [
           // ── Drag handle ──────────────────────────────────────────
-          Center(
-            child: Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.outlineVariant,
-                borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-              ),
-            ),
+          const Center(
+            child: _DragHandle(),
           ),
           SizedBox(height: AppDimensions.s),
 
-          // ── Title + favourite ────────────────────────────────────
+          // ── Title + favourite (FAST) ────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -310,7 +310,7 @@ class _InfoPanel extends StatelessWidget {
           ),
           SizedBox(height: AppDimensions.md),
 
-          // ── Meta chips ───────────────────────────────────────────
+          // ── Meta chips (FAST) ────────────────────────────────────
           Wrap(
             spacing: AppDimensions.s,
             runSpacing: AppDimensions.s,
@@ -323,17 +323,7 @@ class _InfoPanel extends StatelessWidget {
           ),
           SizedBox(height: AppDimensions.lg),
 
-          // ── Author + stats ───────────────────────────────────────
-          AuthorStatsRow(
-            authorName: wallpaper.authorName,
-            authorHandle: wallpaper.authorHandle,
-            authorAvatarUrl: wallpaper.authorAvatarUrl,
-            downloadCount: wallpaper.downloadCount,
-            viewCount: wallpaper.viewCount,
-          ),
-          SizedBox(height: AppDimensions.lg),
-
-          // ── Actions: Preview / Set wallpaper ─────────────────────
+          // ── Actions: Preview / Set wallpaper (FAST) ──────────────
           Row(
             children: [
               Expanded(
@@ -353,28 +343,103 @@ class _InfoPanel extends StatelessWidget {
           ),
           SizedBox(height: AppDimensions.lg),
 
-          // ── Pro upsell ───────────────────────────────────────────
-          ProUpsellBanner(
-            onUpgrade: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: const Text('Pro upgrade coming soon.'),
-                    backgroundColor: AppColors.surfaceHigh,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-            },
+          // ── Lazy-loaded heavy content ────────────────────────────
+          _LazyContent(
+            wallpaper: wallpaper,
+            relatedWallpapers: relatedWallpapers,
+            onTapRelated: onTapRelated,
           ),
-          SizedBox(height: AppDimensions.lg),
-
-          // ── More like this ───────────────────────────────────────
-          Text('More like this', style: AppTextStyles.headlineSm),
-          SizedBox(height: AppDimensions.md),
-          // MoreLikeThisGrid(wallpapers: relatedWallpapers, onTap: onTapRelated),
         ],
       ),
+    );
+  }
+}
+
+// ─── Small pieces ─────────────────────────────────────────────────────────────
+
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: AppColors.outlineVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
+      ),
+    );
+  }
+}
+
+// ─── Lazy Content (deferred rendering) ─────────────────────────────────────
+
+class _LazyContent extends StatefulWidget {
+  final WallpaperEntity wallpaper;
+  final List<WallpaperEntity> relatedWallpapers;
+  final ValueChanged<WallpaperEntity> onTapRelated;
+
+  const _LazyContent({
+    required this.wallpaper,
+    required this.relatedWallpapers,
+    required this.onTapRelated,
+  });
+
+  @override
+  State<_LazyContent> createState() => _LazyContentState();
+}
+
+class _LazyContentState extends State<_LazyContent> {
+  bool _showContent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _showContent = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_showContent) {
+      return SizedBox(height: AppDimensions.lg);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Author + stats (LAZY) ────────────────────────────────
+        AuthorStatsRow(
+          authorName: widget.wallpaper.authorName,
+          authorHandle: widget.wallpaper.authorHandle,
+          authorAvatarUrl: widget.wallpaper.authorAvatarUrl,
+          downloadCount: widget.wallpaper.downloadCount,
+          viewCount: widget.wallpaper.viewCount,
+        ),
+        SizedBox(height: AppDimensions.lg),
+
+        // ── Pro upsell (LAZY) ────────────────────────────────────
+        ProUpsellBanner(
+          onUpgrade: () {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: const Text('Pro upgrade coming soon.'),
+                  backgroundColor: AppColors.surfaceHigh,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+          },
+        ),
+        SizedBox(height: AppDimensions.lg),
+
+        // ── More like this (LAZY) ────────────────────────────────
+        Text('More like this', style: AppTextStyles.headlineSm),
+        SizedBox(height: AppDimensions.md),
+      ],
     );
   }
 }

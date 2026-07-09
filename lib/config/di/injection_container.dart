@@ -167,6 +167,7 @@ Future<void> initDependencies() async {
       signInWithGoogle: sl<SignInWithGoogleUseCase>(),
       forgotPassword: sl<ForgotPasswordUseCase>(),
       signOut: sl<SignOutUseCase>(),
+      prefs: sl<SharedPreferences>(),
     ),
   );
 
