@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/services/wallpaper_service.dart';
 
-enum WallpaperActionStatus { idle, settingWallpaper, success, failure }
+enum WallpaperActionStatus { idle, settingWallpaper, downloading, success, failure }
 
 class WallpaperActionsState extends Equatable {
   final WallpaperActionStatus status;
@@ -25,7 +25,8 @@ class WallpaperActionsState extends Equatable {
     this.message,
   });
 
-  bool get isBusy => status == WallpaperActionStatus.settingWallpaper;
+  bool get isBusy => status == WallpaperActionStatus.settingWallpaper ||
+      status == WallpaperActionStatus.downloading;
 
   WallpaperActionsState copyWith({
     WallpaperActionStatus? status,

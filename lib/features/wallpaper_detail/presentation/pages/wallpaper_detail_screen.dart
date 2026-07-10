@@ -14,9 +14,9 @@ import '../../../../core/widgets/app_shimmer.dart';
 import '../../../home/domain/entities/wallpaper_entity.dart';
 import '../cubit/wallpaper_actions_cubit.dart';
 import '../cubit/wallpaper_actions_state.dart';
-import '../widgets/author_stats_row.dart';
+// import '../widgets/author_stats_row.dart';
 // import '../widgets/more_like_this_grid.dart';
-import '../widgets/pro_upsell_banner.dart';
+// import '../widgets/pro_upsell_banner.dart';
 import '../widgets/set_wallpaper_sheet.dart';
 
 /// WALLR — Wallpaper Detail Screen
@@ -78,6 +78,14 @@ class _DetailView extends StatelessWidget {
       imageUrl: _heroImageUrl,
       wallpaperId: wallpaper.id,
       target: target,
+    );
+  }
+
+  Future<void> _onDownload(BuildContext context) async {
+    await context.read<WallpaperActionsCubit>().downloadWallpaper(
+      imageUrl: _heroImageUrl,
+      wallpaperId: wallpaper.id,
+      fileName: wallpaper.title.isEmpty ? 'wallpaper' : wallpaper.title,
     );
   }
 
@@ -155,6 +163,7 @@ class _DetailView extends StatelessWidget {
                     scrollController: scrollController,
                     onPreview: () => _onPreview(context),
                     onSetWallpaper: () => _onSetWallpaper(context),
+                    onDownload: () => _onDownload(context),
                     onTapRelated: (w) => _onTapRelated(context, w),
                   );
                 },
@@ -246,6 +255,7 @@ class _InfoPanel extends StatelessWidget {
   final ScrollController scrollController;
   final VoidCallback onPreview;
   final VoidCallback onSetWallpaper;
+  final VoidCallback onDownload;
   final ValueChanged<WallpaperEntity> onTapRelated;
 
   const _InfoPanel({
@@ -255,6 +265,7 @@ class _InfoPanel extends StatelessWidget {
     required this.scrollController,
     required this.onPreview,
     required this.onSetWallpaper,
+    required this.onDownload,
     required this.onTapRelated,
   });
 
@@ -294,52 +305,108 @@ class _InfoPanel extends StatelessWidget {
         ),
         children: [
           // ── Drag handle ──────────────────────────────────────────
-          const Center(
-            child: _DragHandle(),
-          ),
+          const Center(child: _DragHandle()),
           SizedBox(height: AppDimensions.s),
 
-          // ── Title + favourite (FAST) ────────────────────────────
+          // ── Title + Favourite Button ────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Text(title, style: AppTextStyles.headlineMd)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.headlineMd,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               SizedBox(width: AppDimensions.s),
-              _FavouriteButton(isFavourited: state.isFavourited),
+              // Favourite button
+              GestureDetector(
+                onTap: () =>
+                    context.read<WallpaperActionsCubit>().toggleFavourite(),
+                child: Container(
+                  width: AppDimensions.avatarSm,
+                  height: AppDimensions.avatarSm,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    state.isFavourited ? Icons.favorite : Icons.favorite_border,
+                    color: state.isFavourited
+                        ? AppColors.error
+                        : AppColors.primary,
+                    size: AppDimensions.iconMd,
+                  ),
+                ),
+              ),
             ],
           ),
           SizedBox(height: AppDimensions.md),
 
-          // ── Meta chips (FAST) ────────────────────────────────────
-          Wrap(
-            spacing: AppDimensions.s,
-            runSpacing: AppDimensions.s,
+          // ── Wallpaper Info (Category, Quality, Size) ──────────────
+          Row(
             children: [
-              _MetaChip(label: _categoryLabel()),
-              _MetaChip(label: wallpaper.resolution),
-              if (wallpaper.width > 0 && wallpaper.height > 0)
-                _MetaChip(label: '${wallpaper.width}×${wallpaper.height}'),
+              // Category
+              Expanded(
+                child: _InfoItem(
+                  icon: Icons.category_rounded,
+                  label: 'Category',
+                  value: _categoryLabel(),
+                ),
+              ),
+              SizedBox(width: AppDimensions.md),
+              // Resolution
+              Expanded(
+                child: _InfoItem(
+                  icon: Icons.hd_rounded,
+                  label: 'Quality',
+                  value: wallpaper.resolution,
+                ),
+              ),
             ],
           ),
+          SizedBox(height: AppDimensions.md),
+
+          // Size (if available)
+          if (wallpaper.width > 0 && wallpaper.height > 0)
+            _InfoItem(
+              icon: Icons.aspect_ratio_rounded,
+              label: 'Size',
+              value: '${wallpaper.width} × ${wallpaper.height}',
+            ),
           SizedBox(height: AppDimensions.lg),
 
-          // ── Actions: Preview / Set wallpaper (FAST) ──────────────
+          // ── Primary Action: Set wallpaper (FAST) ────────────────
+          AppButton.primary(
+            label: 'Set wallpaper',
+            isLoading: state.isBusy,
+            onTap: onSetWallpaper,
+          ),
+          SizedBox(height: AppDimensions.md),
+
+          // ── Secondary Actions: Preview / Download ──────────────────
           Row(
             children: [
               Expanded(
-                flex: 2,
                 child: AppButton.secondary(label: 'Preview', onTap: onPreview),
               ),
               SizedBox(width: AppDimensions.md),
               Expanded(
-                flex: 3,
-                child: AppButton.primary(
-                  label: 'Set wallpaper',
-                  isLoading: state.isBusy,
-                  onTap: onSetWallpaper,
+                child: AppButton.secondary(
+                  label: 'Download',
+                  onTap: onDownload,
                 ),
               ),
             ],
+          ),
+          SizedBox(height: AppDimensions.lg),
+
+          // ── Divider ────────────────────────────────────────────
+          Divider(
+            height: 1,
+            color: AppColors.outlineVariant.withValues(alpha: 0.5),
           ),
           SizedBox(height: AppDimensions.lg),
 
@@ -410,31 +477,31 @@ class _LazyContentState extends State<_LazyContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Author + stats (LAZY) ────────────────────────────────
-        AuthorStatsRow(
-          authorName: widget.wallpaper.authorName,
-          authorHandle: widget.wallpaper.authorHandle,
-          authorAvatarUrl: widget.wallpaper.authorAvatarUrl,
-          downloadCount: widget.wallpaper.downloadCount,
-          viewCount: widget.wallpaper.viewCount,
-        ),
-        SizedBox(height: AppDimensions.lg),
+        // // ── Author + stats (LAZY) ────────────────────────────────
+        // AuthorStatsRow(
+        //   authorName: widget.wallpaper.authorName,
+        //   authorHandle: widget.wallpaper.authorHandle,
+        //   authorAvatarUrl: widget.wallpaper.authorAvatarUrl,
+        //   downloadCount: widget.wallpaper.downloadCount,
+        //   viewCount: widget.wallpaper.viewCount,
+        // ),
+        // SizedBox(height: AppDimensions.lg),
 
-        // ── Pro upsell (LAZY) ────────────────────────────────────
-        ProUpsellBanner(
-          onUpgrade: () {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: const Text('Pro upgrade coming soon.'),
-                  backgroundColor: AppColors.surfaceHigh,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-          },
-        ),
-        SizedBox(height: AppDimensions.lg),
+        // // ── Pro upsell (LAZY) ────────────────────────────────────
+        // ProUpsellBanner(
+        //   onUpgrade: () {
+        //     ScaffoldMessenger.of(context)
+        //       ..hideCurrentSnackBar()
+        //       ..showSnackBar(
+        //         SnackBar(
+        //           content: const Text('Pro upgrade coming soon.'),
+        //           backgroundColor: AppColors.surfaceHigh,
+        //           behavior: SnackBarBehavior.floating,
+        //         ),
+        //       );
+        //   },
+        // ),
+        // SizedBox(height: AppDimensions.lg),
 
         // ── More like this (LAZY) ────────────────────────────────
         Text('More like this', style: AppTextStyles.headlineSm),
@@ -446,51 +513,53 @@ class _LazyContentState extends State<_LazyContent> {
 
 // ─── Small pieces ─────────────────────────────────────────────────────────────
 
-class _MetaChip extends StatelessWidget {
+/// Simple info item with icon, label, and value
+/// Example: [category icon] Category: Space
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
   final String label;
+  final String value;
 
-  const _MetaChip({required this.label});
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: AppDimensions.s,
-      ),
+      padding: EdgeInsets.all(AppDimensions.md),
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurface),
-      ),
-    );
-  }
-}
-
-class _FavouriteButton extends StatelessWidget {
-  final bool isFavourited;
-
-  const _FavouriteButton({required this.isFavourited});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.read<WallpaperActionsCubit>().toggleFavourite(),
-      child: Container(
-        width: AppDimensions.avatarSm,
-        height: AppDimensions.avatarSm,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceHigh,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          isFavourited ? Icons.favorite : Icons.favorite_border,
-          color: isFavourited ? AppColors.error : AppColors.primary,
-          size: AppDimensions.iconMd,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label with icon
+          Row(
+            children: [
+              Icon(icon, size: AppDimensions.iconSm, color: AppColors.primary),
+              SizedBox(width: AppDimensions.s),
+              Text(
+                label,
+                style: AppTextStyles.bodySm.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppDimensions.xs),
+          // Value
+          Text(
+            value,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

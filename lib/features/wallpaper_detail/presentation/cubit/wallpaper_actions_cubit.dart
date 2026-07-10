@@ -62,4 +62,21 @@ class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
       emit(state.copyWith(status: WallpaperActionStatus.idle));
     }
   }
+
+  /// Downloads the wallpaper to device gallery.
+  /// (Currently shows "coming soon" — full implementation pending)
+  Future<void> downloadWallpaper({
+    required String imageUrl,
+    required String wallpaperId,
+    required String fileName,
+  }) async {
+    emit(state.copyWith(
+      status: WallpaperActionStatus.success,
+      message: 'Download feature coming soon.',
+    ));
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!isClosed) emit(state.copyWith(status: WallpaperActionStatus.idle));
+    });
+  }
 }
