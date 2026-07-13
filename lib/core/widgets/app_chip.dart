@@ -103,7 +103,7 @@ class _FilterChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isActive
-              ? goldColor.withOpacity(0.12)
+              ? goldColor.withValues(alpha: 0.12)
               : AppColors.inputSurface,
           borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
           border: Border.all(
@@ -120,9 +120,13 @@ class _FilterChip extends StatelessWidget {
             ],
             Text(
               label,
-              style: AppTextStyles.labelMd.copyWith(
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14.sp,
+                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                height: 20 / 14,
+                letterSpacing: 0.04 * 14,
                 color: isActive ? goldColor : AppColors.onSurface,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],
@@ -168,7 +172,12 @@ class _TagChip extends StatelessWidget {
             ],
             Text(
               label,
-              style: AppTextStyles.labelMd.copyWith(
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                height: 20 / 14,
+                letterSpacing: 0.04 * 14,
                 color: AppColors.onSurfaceVariant,
               ),
             ),
@@ -196,10 +205,10 @@ class _BadgeChip extends StatelessWidget {
         vertical: 3.h,
       ),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.15),
+        color: badgeColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
         border: Border.all(
-          color: badgeColor.withOpacity(0.5),
+          color: badgeColor.withValues(alpha: 0.5),
           width: AppDimensions.borderThin,
         ),
       ),

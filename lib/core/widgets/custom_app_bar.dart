@@ -10,30 +10,33 @@ class CustomAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.workspace_premium,
-                color: AppColors.primaryContainer,
-                size: 24,
-              ),
-              const SizedBox(width: 30),
-              Text(
-                'WALLR',
-                style: AppTextStyles.headlineLgMobile.copyWith(
+    return Container(
+      color: AppColors.background,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.workspace_premium,
                   color: AppColors.primaryContainer,
-                  fontWeight: FontWeight.w700,
+                  size: 24,
                 ),
-              ),
-            ],
-          ),
-          Row(children: actions),
-        ],
+                const SizedBox(width: 30),
+                Text(
+                  'WALLR',
+                  style: AppTextStyles.headlineLgMobile.copyWith(
+                    color: AppColors.primaryContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            Row(children: actions),
+          ],
+        ),
       ),
     );
   }

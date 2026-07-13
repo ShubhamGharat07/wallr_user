@@ -100,6 +100,11 @@ import '../../features/auth/domain/usecases/sign_in_with_google_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/categories/data/datasources/categories_remote_datasource.dart';
+import '../../features/categories/data/repositories/categories_repository_impl.dart';
+import '../../features/categories/domain/repositories/categories_repository.dart';
+import '../../features/categories/domain/usecases/get_categories_usecase.dart';
+import '../../features/categories/presentation/bloc/categories_bloc.dart';
 import '../../features/home/data/datasources/home_remote_datasource.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
@@ -185,6 +190,21 @@ Future<void> initDependencies() async {
 
   // Home BLoC — registerFactory kyunki har baar naya instance chahiye
   sl.registerFactory(() => HomeBloc(getHomeFeed: sl<GetHomeFeedUseCase>()));
+
+  // ── Categories ───────────────────────────────────────────────
+  sl.registerLazySingleton<CategoriesRemoteDataSource>(
+    () => CategoriesRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+  sl.registerLazySingleton<CategoriesRepository>(
+    () => CategoriesRepositoryImpl(
+      remote: sl<CategoriesRemoteDataSource>(),
+      networkInfo: sl<NetworkInfo>(),
+    ),
+  );
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl<CategoriesRepository>()));
+
+  // Categories BLoC — registerFactory kyunki har baar naya instance chahiye
+  sl.registerFactory(() => CategoriesBloc(getCategories: sl<GetCategoriesUseCase>()));
 
   // ── Wallpaper Detail / Actions ───────────────────────────────
   sl.registerLazySingleton<WallpaperService>(() => const WallpaperService());

@@ -8,11 +8,14 @@ class Profile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Profile',
-        style: AppTextStyles.headlineLgMobile.copyWith(
-          color: AppColors.onSurface,
+    return Container(
+      color: AppColors.background,
+      child: Center(
+        child: Text(
+          'Profile',
+          style: AppTextStyles.headlineLgMobile.copyWith(
+            color: AppColors.onSurface,
+          ),
         ),
       ),
     );

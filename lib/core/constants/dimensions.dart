@@ -51,8 +51,8 @@ abstract final class AppDimensions {
   /// 52dp — text field / input height
   static double get inputHeight => 52.h;
 
-  /// 32dp — chip height
-  static double get chipHeight => 32.h;
+  /// 44dp — chip height
+  static double get chipHeight => 44.h;
 
   // ─── Icon Sizes ───────────────────────────────────────────────
   /// 24dp — standard icon

@@ -8,11 +8,14 @@ class Search extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Search',
-        style: AppTextStyles.headlineLgMobile.copyWith(
-          color: AppColors.onSurface,
+    return Container(
+      color: AppColors.background,
+      child: Center(
+        child: Text(
+          'Search',
+          style: AppTextStyles.headlineLgMobile.copyWith(
+            color: AppColors.onSurface,
+          ),
         ),
       ),
     );
