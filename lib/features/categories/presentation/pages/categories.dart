@@ -8,6 +8,7 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
 import '../../../../core/widgets/app_shimmer.dart';
+import '../../../category_detail/presentation/pages/category_detail_page.dart';
 import '../../domain/entities/category_with_wallpapers_entity.dart';
 import '../bloc/categories_bloc.dart';
 import '../bloc/categories_event.dart';
@@ -62,12 +63,53 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(
-          AppColors.primaryContainer,
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: AppDimensions.md),
+                Text(
+                  'Categories',
+                  style: AppTextStyles.headlineLgMobile.copyWith(
+                    color: AppColors.onSurface,
+                    fontSize: 32.sp,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Loading curated collections',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                SizedBox(height: AppDimensions.lg),
+              ],
+            ),
+          ),
         ),
-      ),
+        SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppDimensions.md,
+            mainAxisSpacing: AppDimensions.md,
+            childAspectRatio: 0.75,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => RepaintBoundary(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+                child: const AppShimmer(),
+              ),
+            ),
+            childCount: 6,
+          ),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: AppDimensions.xl)),
+      ],
     );
   }
 }
@@ -129,9 +171,6 @@ class _ContentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final featured = categories.isNotEmpty ? categories.first : null;
-    final others = categories.length > 1 ? categories.skip(1).toList() : [];
-
     return CustomScrollView(
       slivers: [
         // ── Header Section ────────────────────────────────────────
@@ -162,197 +201,22 @@ class _ContentView extends StatelessWidget {
           ),
         ),
 
-        // ── Featured Collection Card ──────────────────────────────
-        if (featured != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
-              child: _FeaturedCollectionCard(category: featured),
-            ),
-          ),
-
-        if (featured != null)
-          SliverToBoxAdapter(child: SizedBox(height: AppDimensions.lg)),
-
         // ── Category Cards Grid ────────────────────────────────────
-        if (others.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
-              child: Text(
-                'Explore',
-                style: AppTextStyles.headlineMd.copyWith(
-                  color: AppColors.onSurface,
-                ),
-              ),
-            ),
+        SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppDimensions.md,
+            mainAxisSpacing: AppDimensions.md,
+            childAspectRatio: 0.75,
           ),
-          SliverToBoxAdapter(child: SizedBox(height: AppDimensions.md)),
-          SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: AppDimensions.md,
-              mainAxisSpacing: AppDimensions.md,
-              childAspectRatio: 0.75,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _CategoryCard(category: others[index]),
-              childCount: others.length,
-            ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _CategoryCard(category: categories[index]),
+            childCount: categories.length,
           ),
-        ],
+        ),
 
         SliverToBoxAdapter(child: SizedBox(height: AppDimensions.xl)),
       ],
-    );
-  }
-}
-
-// ─── Featured Collection Card ─────────────────────────────────────────────
-
-class _FeaturedCollectionCard extends StatelessWidget {
-  final CategoryWithWallpapersEntity category;
-
-  const _FeaturedCollectionCard({required this.category});
-
-  @override
-  Widget build(BuildContext context) {
-    final bgColor = _generatePlaceholderColor(category.id);
-    final hasImage = category.coverUrl.isNotEmpty;
-
-    return RepaintBoundary(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
-        child: Container(
-          height: 200.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
-            border: Border.all(
-              color: AppColors.surface,
-              width: 0.5,
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-            // Background / Image
-            if (hasImage)
-              CachedNetworkImage(
-                imageUrl: category.coverUrl,
-                fit: BoxFit.cover,
-                memCacheWidth: 500,
-                memCacheHeight: 300,
-                maxHeightDiskCache: 500,
-                maxWidthDiskCache: 700,
-                placeholder: (_, _) => const AppShimmer(),
-                errorWidget: (_, _, _) => _ErrorImagePlaceholder(
-                  bgColor: bgColor,
-                ),
-                useOldImageOnUrlChange: true,
-              )
-            else
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF2a1a1a),
-                      Color(0xFF1a0a0a),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Gradient overlay for readability
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.5, 1.0],
-                  colors: [
-                    Colors.transparent,
-                    Colors.transparent,
-                    AppColors.black.withValues(alpha: 0.9),
-                  ],
-                ),
-              ),
-            ),
-
-            // Premium badge
-            if (category.isPremium)
-              Positioned(
-                top: 10.h,
-                right: 20.w,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryContainer,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: 14.w,
-                        color: AppColors.onPrimaryContainer,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'PREMIUM',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.onPrimaryContainer,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Content
-            Positioned(
-              bottom: 16.h,
-              left: 16.w,
-              right: 16.w - 40.w,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'FEATURED COLLECTION',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    category.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.headlineMd.copyWith(
-                      color: AppColors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        ),
-      ),
     );
   }
 }
@@ -370,7 +234,14 @@ class _CategoryCard extends StatelessWidget {
     final hasImage = category.coverUrl.isNotEmpty;
 
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CategoryDetailPage(category: category),
+          ),
+        );
+      },
       child: RepaintBoundary(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),

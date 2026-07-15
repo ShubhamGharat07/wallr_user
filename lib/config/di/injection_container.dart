@@ -105,6 +105,11 @@ import '../../features/categories/data/repositories/categories_repository_impl.d
 import '../../features/categories/domain/repositories/categories_repository.dart';
 import '../../features/categories/domain/usecases/get_categories_usecase.dart';
 import '../../features/categories/presentation/bloc/categories_bloc.dart';
+import '../../features/category_detail/data/datasources/category_detail_remote_datasource.dart';
+import '../../features/category_detail/data/repositories/category_detail_repository_impl.dart';
+import '../../features/category_detail/domain/repositories/category_detail_repository.dart';
+import '../../features/category_detail/domain/usecases/get_wallpapers_by_category_usecase.dart';
+import '../../features/category_detail/presentation/bloc/category_detail_bloc.dart';
 import '../../features/home/data/datasources/home_remote_datasource.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
@@ -205,6 +210,21 @@ Future<void> initDependencies() async {
 
   // Categories BLoC — registerFactory kyunki har baar naya instance chahiye
   sl.registerFactory(() => CategoriesBloc(getCategories: sl<GetCategoriesUseCase>()));
+
+  // ── Category Detail ──────────────────────────────────────────
+  sl.registerLazySingleton<CategoryDetailRemoteDataSource>(
+    () => CategoryDetailRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+  sl.registerLazySingleton<CategoryDetailRepository>(
+    () => CategoryDetailRepositoryImpl(
+      remote: sl<CategoryDetailRemoteDataSource>(),
+      networkInfo: sl<NetworkInfo>(),
+    ),
+  );
+  sl.registerLazySingleton(() => GetWallpapersByCategoryUseCase(sl<CategoryDetailRepository>()));
+
+  // Category Detail BLoC — registerFactory kyunki har baar naya instance chahiye
+  sl.registerFactory(() => CategoryDetailBloc(getWallpapers: sl<GetWallpapersByCategoryUseCase>()));
 
   // ── Wallpaper Detail / Actions ───────────────────────────────
   sl.registerLazySingleton<WallpaperService>(() => const WallpaperService());
