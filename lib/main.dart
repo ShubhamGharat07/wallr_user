@@ -41,14 +41,11 @@ class MyApp extends StatelessWidget {
               create: (_) => OnboardingCubit(
                 CompleteOnboardingUseCase(
                   OnboardingRepositoryImpl(
-                    OnboardingLocalDataSourceImpl(
-                      sl<SharedPreferences>(),
-                    ),
+                    OnboardingLocalDataSourceImpl(sl<SharedPreferences>()),
                   ),
                 ),
               ),
             ),
-            // Baaki BlocProviders yahan add hote jayenge jaise jaise screens banti hain
           ],
           child: MaterialApp.router(
             title: 'Wallr',
@@ -61,4 +58,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

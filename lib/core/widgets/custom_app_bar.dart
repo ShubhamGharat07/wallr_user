@@ -13,7 +13,7 @@ class CustomAppBar extends StatelessWidget {
     return Container(
       color: AppColors.background,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -22,12 +22,12 @@ class CustomAppBar extends StatelessWidget {
                 Icon(
                   Icons.workspace_premium,
                   color: AppColors.primaryContainer,
-                  size: 24,
+                  size: 20,
                 ),
-                const SizedBox(width: 30),
+                const SizedBox(width: 24),
                 Text(
                   'WALLR',
-                  style: AppTextStyles.headlineLgMobile.copyWith(
+                  style: AppTextStyles.headlineMd.copyWith(
                     color: AppColors.primaryContainer,
                     fontWeight: FontWeight.w700,
                   ),
