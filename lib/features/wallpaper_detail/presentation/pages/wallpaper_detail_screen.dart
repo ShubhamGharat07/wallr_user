@@ -504,9 +504,81 @@ class _LazyContentState extends State<_LazyContent> {
         // SizedBox(height: AppDimensions.lg),
 
         // ── More like this (LAZY) ────────────────────────────────
-        Text('More like this', style: AppTextStyles.headlineSm),
-        SizedBox(height: AppDimensions.md),
+        if (widget.relatedWallpapers.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('More like this', style: AppTextStyles.headlineSm),
+              SizedBox(height: AppDimensions.md),
+              _MoreLikeThisGrid(
+                wallpapers: widget.relatedWallpapers.take(5).toList(),
+                onTap: widget.onTapRelated,
+              ),
+            ],
+          ),
       ],
+    );
+  }
+}
+
+// ─── More Like This Grid ─────────────────────────────────────────────────────
+
+class _MoreLikeThisGrid extends StatelessWidget {
+  final List<WallpaperEntity> wallpapers;
+  final ValueChanged<WallpaperEntity> onTap;
+
+  const _MoreLikeThisGrid({
+    required this.wallpapers,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 160.h,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.zero,
+          itemCount: wallpapers.length,
+          itemBuilder: (context, index) {
+            final wallpaper = wallpapers[index];
+            return Padding(
+              padding: EdgeInsets.only(right: AppDimensions.md),
+              child: GestureDetector(
+                onTap: () => onTap(wallpaper),
+                child: RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+                    child: CachedNetworkImage(
+                      imageUrl: wallpaper.cardImageUrl,
+                      fit: BoxFit.cover,
+                      width: 100.w,
+                      height: 160.h,
+                      memCacheWidth: 150,
+                      memCacheHeight: 240,
+                      maxWidthDiskCache: 200,
+                      maxHeightDiskCache: 300,
+                      placeholder: (_, _) => Container(
+                        color: AppColors.surface,
+                      ),
+                      errorWidget: (_, _, _) => Container(
+                        color: AppColors.cardSurface,
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: AppColors.navInactive,
+                          size: AppDimensions.iconMd,
+                        ),
+                      ),
+                      useOldImageOnUrlChange: true,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

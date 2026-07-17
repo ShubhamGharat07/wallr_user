@@ -3,14 +3,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../config/di/injection_container.dart';
+import '../../../../config/routes/app_router.dart';
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
 import '../../../../core/widgets/wallpaper_card.dart';
 import '../../../categories/domain/entities/category_with_wallpapers_entity.dart';
-import '../../../wallpaper_detail/presentation/pages/wallpaper_detail_screen.dart';
+import '../../../home/domain/entities/wallpaper_entity.dart';
 import '../bloc/category_detail_bloc.dart';
 import '../bloc/category_detail_event.dart';
 import '../bloc/category_detail_state.dart';
@@ -193,7 +196,7 @@ class _ErrorView extends StatelessWidget {
 // ─── Content View ──────────────────────────────────────────────────────────
 
 class _ContentView extends StatelessWidget {
-  final List<dynamic> wallpapers;
+  final List<WallpaperEntity> wallpapers;
 
   const _ContentView({required this.wallpapers});
 
@@ -240,7 +243,16 @@ class _ContentView extends StatelessWidget {
                 resolution: wallpaper.resolution,
                 isPremium: wallpaper.isPremium,
                 onTap: () {
-                  // TODO: Navigate to wallpaper detail page
+                  final related = wallpapers
+                      .where((w) => w.id != wallpaper.id)
+                      .toList();
+                  context.push(
+                    RouteNames.wallpaperDetail,
+                    extra: WallpaperDetailExtras(
+                      wallpaper: wallpaper,
+                      relatedWallpapers: related,
+                    ),
+                  );
                 },
               );
             }, childCount: wallpapers.length),

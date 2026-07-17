@@ -120,6 +120,11 @@ import '../../features/onboarding/domain/repositories/onboarding_repository.dart
 import '../../features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
 import '../../features/onboarding/presentation/bloc/onboarding_cubit.dart';
 import '../../features/wallpaper_detail/presentation/cubit/wallpaper_actions_cubit.dart';
+import '../../features/search/data/datasources/search_remote_datasource.dart';
+import '../../features/search/data/repositories/search_repository_impl.dart';
+import '../../features/search/domain/repositories/search_repository.dart';
+import '../../features/search/domain/usecases/search_usecase.dart';
+import '../../features/search/presentation/bloc/search_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -225,6 +230,21 @@ Future<void> initDependencies() async {
 
   // Category Detail BLoC — registerFactory kyunki har baar naya instance chahiye
   sl.registerFactory(() => CategoryDetailBloc(getWallpapers: sl<GetWallpapersByCategoryUseCase>()));
+
+  // ── Search ───────────────────────────────────────────────────
+  sl.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+  sl.registerLazySingleton<SearchRepository>(
+    () => SearchRepositoryImpl(
+      remote: sl<SearchRemoteDataSource>(),
+      networkInfo: sl<NetworkInfo>(),
+    ),
+  );
+  sl.registerLazySingleton(() => SearchUseCase(repository: sl<SearchRepository>()));
+
+  // Search BLoC — registerFactory kyunki har baar naya instance chahiye
+  sl.registerFactory(() => SearchBloc(searchUseCase: sl<SearchUseCase>()));
 
   // ── Wallpaper Detail / Actions ───────────────────────────────
   sl.registerLazySingleton<WallpaperService>(() => const WallpaperService());

@@ -8,9 +8,6 @@ import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
 import 'category_icon_map.dart';
 
-/// Shown inside a category row when that category has zero active
-/// wallpapers yet — keeps the section visible (so users discover the
-/// category exists) without showing a broken/empty grid.
 class CategoryComingSoonCard extends StatelessWidget {
   final IconData icon;
   final Color accentColor;
@@ -49,9 +46,7 @@ class CategoryComingSoonCard extends StatelessWidget {
             SizedBox(height: AppDimensions.sm),
             Text(
               'Coming soon',
-              style: AppTextStyles.labelLg.copyWith(
-                color: AppColors.onSurface,
-              ),
+              style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurface),
             ),
             SizedBox(height: AppDimensions.xs / 2),
             Text(

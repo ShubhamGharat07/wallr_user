@@ -65,6 +65,7 @@
 //   ],
 // );
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -84,6 +85,16 @@ import '../../features/splash/presentation/pages/splash_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_detail_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_preview_screen.dart';
 import 'route_names.dart';
+
+class WallpaperDetailExtras {
+  final WallpaperEntity wallpaper;
+  final List<WallpaperEntity> relatedWallpapers;
+
+  WallpaperDetailExtras({
+    required this.wallpaper,
+    this.relatedWallpapers = const [],
+  });
+}
 
 /// WALLR — GoRouter config
 /// Routes are added here as each screen is built.
@@ -148,8 +159,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: RouteNames.wallpaperDetail,
       builder: (context, state) {
-        final wallpaper = state.extra as WallpaperEntity;
-        return WallpaperDetailScreen(wallpaper: wallpaper);
+        final extras = state.extra;
+        if (extras is WallpaperDetailExtras) {
+          return WallpaperDetailScreen(
+            wallpaper: extras.wallpaper,
+            relatedWallpapers: extras.relatedWallpapers,
+          );
+        } else if (extras is WallpaperEntity) {
+          // Backward compatibility: direct wallpaper entity (from home)
+          return WallpaperDetailScreen(wallpaper: extras);
+        }
+        return const SizedBox.shrink();
       },
     ),
     GoRoute(
