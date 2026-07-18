@@ -394,8 +394,8 @@ class _InfoPanel extends StatelessWidget {
               ),
               SizedBox(width: AppDimensions.md),
               Expanded(
-                child: AppButton.secondary(
-                  label: 'Download',
+                child: _DownloadButton(
+                  state: state,
                   onTap: onDownload,
                 ),
               ),
@@ -417,6 +417,100 @@ class _InfoPanel extends StatelessWidget {
             onTapRelated: onTapRelated,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Download Button with Progress ────────────────────────────────────────
+
+class _DownloadButton extends StatelessWidget {
+  final WallpaperActionsState state;
+  final VoidCallback onTap;
+
+  const _DownloadButton({
+    required this.state,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDownloading = state.status == WallpaperActionStatus.downloading;
+    final downloadProgress = state.downloadProgress;
+
+    // Show progress % when downloading
+    if (isDownloading) {
+      return Stack(
+        children: [
+          // Background bar with progress
+          Container(
+            height: AppDimensions.buttonHeight,
+            decoration: BoxDecoration(
+              color: AppColors.primaryContainer.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
+              border: Border.all(
+                color: AppColors.primaryContainer,
+                width: 1.5,
+              ),
+            ),
+            // Progress fill
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
+              child: LinearProgressIndicator(
+                value: downloadProgress,
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.primaryContainer.withValues(alpha: 0.3),
+                ),
+                minHeight: AppDimensions.buttonHeight,
+              ),
+            ),
+          ),
+          // Progress text
+          Center(
+            child: Text(
+              '${(downloadProgress * 100).toStringAsFixed(0)}%',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.primaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Download button
+    return GestureDetector(
+      onTap: state.isBusy ? null : onTap,
+      child: Container(
+        height: AppDimensions.buttonHeight,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
+          border: Border.all(
+            color: AppColors.outlineVariant,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.download_rounded,
+              size: AppDimensions.iconMd,
+              color: AppColors.primary,
+            ),
+            SizedBox(width: AppDimensions.xs),
+            Text(
+              'Download',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -636,3 +730,4 @@ class _InfoItem extends StatelessWidget {
     );
   }
 }
+

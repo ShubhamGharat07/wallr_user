@@ -1,19 +1,25 @@
 // lib/features/wallpaper_detail/presentation/cubit/wallpaper_actions_cubit.dart
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/services/wallpaper_service.dart';
+import '../../../wallpaper_download/domain/repositories/download_repository.dart';
 import 'wallpaper_actions_state.dart';
 
 /// Drives the per-wallpaper device actions on the detail screen:
-/// setting the wallpaper (home / lock / both) and a local favourite toggle.
+/// setting the wallpaper (home / lock / both), downloading, and favorite toggle.
 ///
 /// Registered as a factory in DI — one instance per detail screen.
 class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
   final WallpaperService _service;
+  final DownloadRepository _downloadRepository;
 
-  WallpaperActionsCubit({required WallpaperService service})
-      : _service = service,
+  WallpaperActionsCubit({
+    required WallpaperService service,
+    required DownloadRepository downloadRepository,
+  })  : _service = service,
+        _downloadRepository = downloadRepository,
         super(const WallpaperActionsState());
 
   void toggleFavourite() {
@@ -63,20 +69,99 @@ class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
     }
   }
 
-  /// Downloads the wallpaper to device gallery.
-  /// (Currently shows "coming soon" — full implementation pending)
+  /// Downloads the wallpaper to device storage with progress tracking.
   Future<void> downloadWallpaper({
     required String imageUrl,
     required String wallpaperId,
     required String fileName,
   }) async {
-    emit(state.copyWith(
-      status: WallpaperActionStatus.success,
-      message: 'Download feature coming soon.',
-    ));
+    if (state.isBusy) return;
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!isClosed) emit(state.copyWith(status: WallpaperActionStatus.idle));
-    });
+    try {
+      // Check if already downloaded
+      final isDownloaded = await _downloadRepository.isDownloaded(wallpaperId);
+      if (isDownloaded.fold((failure) => false, (downloaded) => downloaded)) {
+        emit(state.copyWith(
+          status: WallpaperActionStatus.success,
+          message: 'Already downloaded.',
+          downloadProgress: 1.0,
+        ));
+        return;
+      }
+
+      // Request storage permission
+      final permissionStatus = await Permission.photos.request();
+      if (!permissionStatus.isGranted) {
+        emit(state.copyWith(
+          status: WallpaperActionStatus.failure,
+          message: 'Storage permission denied.',
+        ));
+        return;
+      }
+
+      // Start download
+      emit(state.copyWith(
+        status: WallpaperActionStatus.downloading,
+        downloadProgress: 0.0,
+      ));
+
+      // Start download via repository
+      final result = await _downloadRepository.downloadWallpaper(
+        imageUrl: imageUrl,
+        wallpaperId: wallpaperId,
+        title: fileName,
+      );
+
+      result.fold(
+        (failure) {
+          emit(state.copyWith(
+            status: WallpaperActionStatus.failure,
+            message: 'Download failed. Please try again.',
+          ));
+        },
+        (progressStream) {
+          // Listen to progress stream
+          progressStream.listen(
+            (progress) {
+              if (!isClosed) {
+                emit(state.copyWith(
+                  status: WallpaperActionStatus.downloading,
+                  downloadProgress: progress,
+                ));
+              }
+            },
+            onError: (error) {
+              if (!isClosed) {
+                emit(state.copyWith(
+                  status: WallpaperActionStatus.failure,
+                  message: 'Download failed: ${error.toString()}',
+                ));
+              }
+            },
+            onDone: () {
+              if (!isClosed) {
+                emit(state.copyWith(
+                  status: WallpaperActionStatus.success,
+                  message: 'Downloaded successfully!',
+                  downloadProgress: 1.0,
+                ));
+              }
+            },
+          );
+        },
+      );
+    } catch (e) {
+      emit(state.copyWith(
+        status: WallpaperActionStatus.failure,
+        message: 'Something went wrong: ${e.toString()}',
+      ));
+    } finally {
+      // Auto-reset after 2 seconds
+      await Future.delayed(const Duration(seconds: 2));
+      if (!isClosed) {
+        emit(state.copyWith(status: WallpaperActionStatus.idle));
+      }
+    }
   }
 }
+

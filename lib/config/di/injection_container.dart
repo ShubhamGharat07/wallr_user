@@ -85,6 +85,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -125,6 +126,9 @@ import '../../features/search/data/repositories/search_repository_impl.dart';
 import '../../features/search/domain/repositories/search_repository.dart';
 import '../../features/search/domain/usecases/search_usecase.dart';
 import '../../features/search/presentation/bloc/search_bloc.dart';
+import '../../features/wallpaper_download/data/datasources/local_download_datasource.dart';
+import '../../features/wallpaper_download/data/repositories/download_repository_impl.dart';
+import '../../features/wallpaper_download/domain/repositories/download_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -247,9 +251,24 @@ Future<void> initDependencies() async {
   sl.registerFactory(() => SearchBloc(searchUseCase: sl<SearchUseCase>()));
 
   // ── Wallpaper Detail / Actions ───────────────────────────────
-  sl.registerLazySingleton<WallpaperService>(() => const WallpaperService());
+  sl.registerLazySingleton<WallpaperService>(() => WallpaperService());
+
+  // Download Repository
+  sl.registerLazySingleton<LocalDownloadDataSource>(
+    () => LocalDownloadDataSourceImpl(prefs: sl<SharedPreferences>()),
+  );
+  sl.registerLazySingleton<DownloadRepository>(
+    () => DownloadRepositoryImpl(
+      localDataSource: sl<LocalDownloadDataSource>(),
+      dio: Dio(),
+    ),
+  );
+
   // Factory — one cubit per detail/preview screen instance.
   sl.registerFactory(
-    () => WallpaperActionsCubit(service: sl<WallpaperService>()),
+    () => WallpaperActionsCubit(
+      service: sl<WallpaperService>(),
+      downloadRepository: sl<DownloadRepository>(),
+    ),
   );
 }

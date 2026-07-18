@@ -18,11 +18,15 @@ class WallpaperActionsState extends Equatable {
   /// Message to surface in a snackbar — success or error.
   final String? message;
 
+  /// Download progress (0.0 to 1.0) for UI display.
+  final double downloadProgress;
+
   const WallpaperActionsState({
     this.status = WallpaperActionStatus.idle,
     this.activeTarget,
     this.isFavourited = false,
     this.message,
+    this.downloadProgress = 0.0,
   });
 
   bool get isBusy => status == WallpaperActionStatus.settingWallpaper ||
@@ -33,15 +37,17 @@ class WallpaperActionsState extends Equatable {
     WallpaperTarget? activeTarget,
     bool? isFavourited,
     String? message,
+    double? downloadProgress,
   }) {
     return WallpaperActionsState(
       status: status ?? this.status,
       activeTarget: activeTarget ?? this.activeTarget,
       isFavourited: isFavourited ?? this.isFavourited,
       message: message,
+      downloadProgress: downloadProgress ?? this.downloadProgress,
     );
   }
 
   @override
-  List<Object?> get props => [status, activeTarget, isFavourited, message];
+  List<Object?> get props => [status, activeTarget, isFavourited, message, downloadProgress];
 }
