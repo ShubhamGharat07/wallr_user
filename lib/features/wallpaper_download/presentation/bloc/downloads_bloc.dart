@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../home/domain/entities/wallpaper_entity.dart';
+import '../../data/models/downloaded_wallpaper_model.dart';
 import '../../domain/repositories/download_repository.dart';
 import 'downloads_event.dart';
 import 'downloads_state.dart';
@@ -27,12 +28,32 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
       (failure) {
         emit(DownloadsError(message: failure.message));
       },
-      (wallpapers) {
+      (downloadedWallpapers) {
         // Convert downloaded wallpapers to WallpaperEntity
-        // For now, we'll just pass them through
-        // In a real scenario, we might need to map them
-        emit(DownloadsLoaded(wallpapers: wallpapers.cast<WallpaperEntity>()));
+        final wallpapers = downloadedWallpapers.map((downloaded) {
+          if (downloaded is DownloadedWallpaperModel) {
+            return downloaded.toWallpaperEntity();
+          }
+          // Fallback: create basic WallpaperEntity from downloaded entity
+          return WallpaperEntity(
+            id: downloaded.wallpaperId,
+            title: downloaded.title,
+            imageUrl: downloaded.cloudinaryUrl,
+            thumbnailUrl: downloaded.cloudinaryUrl,
+            categorySlug: '',
+            resolution: 'HD',
+            width: 0,
+            height: 0,
+            viewCount: 0,
+            isPremium: false,
+            isEditorChoice: false,
+            isTrendingPinned: false,
+          );
+        }).toList();
+
+        emit(DownloadsLoaded(wallpapers: wallpapers));
       },
     );
   }
 }
+

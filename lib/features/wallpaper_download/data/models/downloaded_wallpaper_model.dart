@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/entities/downloaded_wallpaper_entity.dart';
+import '../../../home/domain/entities/wallpaper_entity.dart';
 
 /// Model extending DownloadedWallpaperEntity.
 /// Handles serialization/deserialization for SharedPreferences storage.
@@ -65,4 +66,29 @@ class DownloadedWallpaperModel extends DownloadedWallpaperEntity {
   String toJsonString() {
     return jsonEncode(toJson());
   }
+
+  /// Converts to WallpaperEntity for display in grid.
+  /// Returns a minimal WallpaperEntity with downloaded wallpaper data.
+  WallpaperEntity toWallpaperEntity() {
+    return WallpaperEntity(
+      id: wallpaperId,
+      title: title,
+      imageUrl: cloudinaryUrl,
+      thumbnailUrl: cloudinaryUrl,
+      categorySlug: '',
+      resolution: 'HD',
+      width: 0,
+      height: 0,
+      viewCount: 0,
+      downloadCount: 0,
+      isPremium: false,
+      isEditorChoice: false,
+      isTrendingPinned: false,
+      tags: const [],
+      authorName: '',
+      authorHandle: '',
+      authorAvatarUrl: '',
+    );
+  }
 }
+
