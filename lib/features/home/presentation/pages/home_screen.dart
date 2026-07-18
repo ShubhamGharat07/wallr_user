@@ -85,6 +85,47 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // ── Editor's Choice ────────────────────
+                              if (feed.editorsChoice.isNotEmpty) ...[
+                                Text(
+                                  'Editor\'s Choice',
+                                  style: AppTextStyles.headlineMd.copyWith(
+                                    color: AppColors.onSurface,
+                                  ),
+                                ),
+                                SizedBox(height: AppDimensions.md),
+                                SizedBox(
+                                  height: 300.h,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: feed.editorsChoice.length,
+                                    itemBuilder: (context, index) {
+                                      final wallpaper =
+                                          feed.editorsChoice[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right: AppDimensions.md,
+                                        ),
+                                        child: SizedBox(
+                                          width: 220.w,
+                                          child: WallpaperCard(
+                                            imageUrl: wallpaper.cardImageUrl,
+                                            title: wallpaper.title.isEmpty
+                                                ? null
+                                                : wallpaper.title,
+                                            resolution: wallpaper.resolution,
+                                            isPremium: wallpaper.isPremium,
+                                            onTap: () =>
+                                                _onWallpaperTap(wallpaper),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: AppDimensions.lg),
+                              ],
+
                               // ── Category Filters ───────────────────
                               if (feed.categorySections.isNotEmpty) ...[
                                 Text(
@@ -147,47 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           );
                                         },
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.lg),
-                              ],
-
-                              // ── Editor's Choice ────────────────────
-                              if (feed.editorsChoice.isNotEmpty) ...[
-                                Text(
-                                  'Editor\'s Choice',
-                                  style: AppTextStyles.headlineMd.copyWith(
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.md),
-                                SizedBox(
-                                  height: 300.h,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: feed.editorsChoice.length,
-                                    itemBuilder: (context, index) {
-                                      final wallpaper =
-                                          feed.editorsChoice[index];
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          right: AppDimensions.md,
-                                        ),
-                                        child: SizedBox(
-                                          width: 220.w,
-                                          child: WallpaperCard(
-                                            imageUrl: wallpaper.cardImageUrl,
-                                            title: wallpaper.title.isEmpty
-                                                ? null
-                                                : wallpaper.title,
-                                            resolution: wallpaper.resolution,
-                                            isPremium: wallpaper.isPremium,
-                                            onTap: () =>
-                                                _onWallpaperTap(wallpaper),
-                                          ),
-                                        ),
                                       );
                                     },
                                   ),

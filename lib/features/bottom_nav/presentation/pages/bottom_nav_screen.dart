@@ -72,9 +72,7 @@ class BottomNavScreen extends StatelessWidget {
                 ],
               ),
             ),
-          Expanded(
-            child: child,
-          ),
+          Expanded(child: child),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -83,10 +81,7 @@ class BottomNavScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             color: AppColors.background,
             border: Border(
-              top: BorderSide(
-                color: AppColors.surface,
-                width: 0.5,
-              ),
+              top: BorderSide(color: AppColors.surface, width: 0.5),
             ),
           ),
           child: BottomNavigationBar(
