@@ -3,6 +3,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Required to apply an image as the device wallpaper (async_wallpaper). -->
     <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+    <!-- Required to save downloaded wallpapers to device storage. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!-- Android 13+ granular media permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
         android:label="wallr"
         android:name="${applicationName}"

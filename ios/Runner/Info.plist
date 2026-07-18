@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Required permissions for downloading wallpapers -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to save downloaded wallpapers.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save wallpapers to your photo library.</string>
 </dict>
 </plist>
