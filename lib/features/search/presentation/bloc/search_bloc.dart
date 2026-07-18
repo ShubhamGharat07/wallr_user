@@ -8,7 +8,7 @@ import 'search_state.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final SearchUseCase _searchUseCase;
-  Timer? _debounce;
+  Timer? _debounceTimer;
 
   static const int _debounceMs = 300;
 
@@ -26,34 +26,41 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     final query = event.query.trim();
 
     if (query.isEmpty) {
-      _debounce?.cancel();
+      _debounceTimer?.cancel();
       emit(const SearchInitial());
       return;
     }
 
-    _debounce?.cancel();
+    // Cancel previous timer
+    _debounceTimer?.cancel();
 
-    await Future<void>.delayed(
-      const Duration(milliseconds: _debounceMs),
-    );
+    // Emit intermediate state to show user is typing
+    emit(SearchQuerying(lastQuery: query));
 
-    if (!emit.isDone) {
-      emit(SearchLoading(query: query));
+    // Wait for debounce period
+    await Future<void>.delayed(const Duration(milliseconds: _debounceMs));
 
-      final result = await _searchUseCase(SearchParams(query: query));
+    // Check if bloc is still active and not closed
+    if (isClosed) return;
 
-      if (!emit.isDone) {
-        result.fold(
-          (failure) => emit(SearchError(
-            message: failure.message,
-            lastQuery: query,
-          )),
-          (searchResult) => emit(SearchLoaded(
-            results: searchResult,
-            query: query,
-          )),
-        );
-      }
+    // Emit loading state
+    emit(SearchLoading(query: query));
+
+    // Perform the search
+    final result = await _searchUseCase(SearchParams(query: query));
+
+    // Only emit if bloc is still active
+    if (!isClosed) {
+      result.fold(
+        (failure) => emit(SearchError(
+          message: failure.message,
+          lastQuery: query,
+        )),
+        (searchResult) => emit(SearchLoaded(
+          results: searchResult,
+          query: query,
+        )),
+      );
     }
   }
 
@@ -61,13 +68,14 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     SearchCleared event,
     Emitter<SearchState> emit,
   ) async {
-    _debounce?.cancel();
+    _debounceTimer?.cancel();
     emit(const SearchInitial());
   }
 
   @override
   Future<void> close() {
-    _debounce?.cancel();
+    _debounceTimer?.cancel();
     return super.close();
   }
 }
+

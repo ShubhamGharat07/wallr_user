@@ -9,6 +9,21 @@ import '../constants/dimensions.dart';
 import '../constants/text_styles.dart';
 import 'app_shimmer.dart';
 
+// Pre-computed decorations to avoid recreating them every frame
+const _textShadows = [
+  Shadow(blurRadius: 8, color: Colors.black54),
+];
+
+final _premiumBorder = Border.all(
+  color: AppColors.primaryContainer.withValues(alpha: 0.9),
+  width: AppDimensions.borderThin,
+);
+
+final _normalBorder = Border.all(
+  color: Colors.white.withValues(alpha: 0.4),
+  width: AppDimensions.borderThin,
+);
+
 /// Reusable wallpaper card — used in:
 /// Home feed masonry grid, Favourites, Collections, Search results
 ///
@@ -55,7 +70,7 @@ class WallpaperCard extends StatelessWidget {
                 maxHeightDiskCache: 1000,
                 maxWidthDiskCache: 700,
                 placeholder: (_, __) => const AppShimmer(),
-                errorWidget: (_, _, _) => _ErrorPlaceholder(),
+                errorWidget: (_, _, _) => const _ErrorPlaceholder(),
                 useOldImageOnUrlChange: true,
               ),
 
@@ -88,9 +103,7 @@ class WallpaperCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.labelLg.copyWith(
                       color: Colors.white,
-                      shadows: const [
-                        Shadow(blurRadius: 8, color: Colors.black54),
-                      ],
+                      shadows: _textShadows,
                     ),
                   ),
                 ),
@@ -120,16 +133,16 @@ class _GradientOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return const DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            Colors.black.withValues(alpha: 0.4),
+            Color.fromARGB(102, 0, 0, 0), // Colors.black.withValues(alpha: 0.4)
           ],
-          stops: const [0.4, 1.0],
+          stops: [0.4, 1.0],
         ),
       ),
     );
@@ -156,12 +169,7 @@ class _ResolutionBadge extends StatelessWidget {
             ? AppColors.primaryContainer.withValues(alpha: 0.25)
             : Colors.black.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-        border: Border.all(
-          color: isPremium
-              ? AppColors.primaryContainer.withValues(alpha: 0.9)
-              : Colors.white.withValues(alpha: 0.4),
-          width: AppDimensions.borderThin,
-        ),
+        border: isPremium ? _premiumBorder : _normalBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -223,6 +231,8 @@ class _GlassFavButton extends StatelessWidget {
 // ─── Error Placeholder ────────────────────────────────────────────────────────
 
 class _ErrorPlaceholder extends StatelessWidget {
+  const _ErrorPlaceholder();
+
   @override
   Widget build(BuildContext context) {
     return Container(

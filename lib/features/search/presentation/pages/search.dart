@@ -86,6 +86,7 @@ class _SearchViewState extends State<_SearchView> {
             Expanded(
               child: BlocBuilder<SearchBloc, SearchState>(
                 buildWhen: (previous, current) {
+                  // Skip SearchQuerying state to prevent unnecessary rebuilds
                   return current is! SearchQuerying;
                 },
                 builder: (context, state) {
@@ -134,10 +135,7 @@ class _EmptyStateView extends StatelessWidget {
               ),
             ),
             SizedBox(height: AppDimensions.xs),
-            Text(
-              'Type to start searching',
-              style: AppTextStyles.bodyMdMuted,
-            ),
+            Text('Type to start searching', style: AppTextStyles.bodyMdMuted),
           ],
         ),
       ),
@@ -208,10 +206,7 @@ class _ResultsView extends StatelessWidget {
                 ),
               ),
               SizedBox(height: AppDimensions.xs),
-              Text(
-                'Try different keywords',
-                style: AppTextStyles.bodyMdMuted,
-              ),
+              Text('Try different keywords', style: AppTextStyles.bodyMdMuted),
             ],
           ),
         ),
@@ -286,23 +281,18 @@ class _ResultsView extends StatelessWidget {
                 mainAxisSpacing: AppDimensions.md,
                 childAspectRatio: 0.65,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final wallpaper = state.results.wallpapers[index];
-                  return _SearchWallpaperCard(
-                    wallpaper: wallpaper,
-                    onTap: () {
-                      context.push(
-                        RouteNames.wallpaperDetail,
-                        extra: WallpaperDetailExtras(
-                          wallpaper: wallpaper,
-                        ),
-                      );
-                    },
-                  );
-                },
-                childCount: state.results.wallpapers.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final wallpaper = state.results.wallpapers[index];
+                return _SearchWallpaperCard(
+                  wallpaper: wallpaper,
+                  onTap: () {
+                    context.push(
+                      RouteNames.wallpaperDetail,
+                      extra: WallpaperDetailExtras(wallpaper: wallpaper),
+                    );
+                  },
+                );
+              }, childCount: state.results.wallpapers.length),
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: AppDimensions.xl)),
@@ -328,11 +318,7 @@ class _ErrorStateView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64.w,
-                color: AppColors.error,
-              ),
+              Icon(Icons.error_outline, size: 64.w, color: AppColors.error),
               SizedBox(height: AppDimensions.lg),
               Text(
                 'Search failed',
@@ -350,8 +336,8 @@ class _ErrorStateView extends StatelessWidget {
                 onPressed: () {
                   if (state.lastQuery != null && state.lastQuery!.isNotEmpty) {
                     context.read<SearchBloc>().add(
-                          SearchQueryChanged(query: state.lastQuery!),
-                        );
+                      SearchQueryChanged(query: state.lastQuery!),
+                    );
                   }
                 },
                 child: const Text('Retry'),
@@ -370,10 +356,7 @@ class _SearchInput extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
-  const _SearchInput({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _SearchInput({required this.controller, required this.onChanged});
 
   @override
   State<_SearchInput> createState() => _SearchInputState();
@@ -405,7 +388,8 @@ class _SearchInputState extends State<_SearchInput> {
     return TextField(
       controller: widget.controller,
       onChanged: widget.onChanged,
-      autofocus: true,
+      autofocus:
+          false, // Disabled to prevent keyboard jank on initial navigation
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: 'Search wallpapers...',
@@ -440,9 +424,7 @@ class _SearchInputState extends State<_SearchInput> {
         ),
         suffixIconColor: AppColors.onSurfaceVariant,
       ),
-      style: AppTextStyles.bodyMd.copyWith(
-        color: AppColors.onSurface,
-      ),
+      style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurface),
     );
   }
 }
@@ -453,10 +435,7 @@ class _CategoryChip extends StatelessWidget {
   final String name;
   final VoidCallback onTap;
 
-  const _CategoryChip({
-    required this.name,
-    required this.onTap,
-  });
+  const _CategoryChip({required this.name, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -470,10 +449,7 @@ class _CategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.primary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          border: Border.all(
-            color: AppColors.primary,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.primary, width: 1),
         ),
         child: Center(
           child: Text(
@@ -495,10 +471,7 @@ class _SearchWallpaperCard extends StatelessWidget {
   final WallpaperEntity wallpaper;
   final VoidCallback onTap;
 
-  const _SearchWallpaperCard({
-    required this.wallpaper,
-    required this.onTap,
-  });
+  const _SearchWallpaperCard({required this.wallpaper, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

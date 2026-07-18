@@ -27,20 +27,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String selectedCategorySlug = 'all';
+  late ValueNotifier<String> _selectedCategoryNotifier;
 
   @override
   void initState() {
     super.initState();
+    _selectedCategoryNotifier = ValueNotifier('all');
     context.read<HomeBloc>().add(const HomeFeedRequested());
   }
 
-  // String get _greeting {
-  //   final hour = DateTime.now().hour;
-  //   if (hour < 12) return 'Good morning';
-  //   if (hour < 17) return 'Good afternoon';
-  //   return 'Good evening';
-  // }
+  @override
+  void dispose() {
+    _selectedCategoryNotifier.dispose();
+    super.dispose();
+  }
 
   void _onWallpaperTap(WallpaperEntity wallpaper) {
     context.push(RouteNames.wallpaperDetail, extra: wallpaper);
@@ -85,23 +85,74 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // SizedBox(height: AppDimensions.md),
-                              // ── Greeting Section ──────────────────
-                              // Text(
-                              //   _greeting,
-                              //   style: AppTextStyles.headlineLgMobile.copyWith(
-                              //     color: AppColors.onSurface,
-                              //     fontSize: 32.sp,
-                              //   ),
-                              // ),
-                              // SizedBox(height: 4.h),
-                              // Text(
-                              //   'Discover today\'s picks',
-                              //   style: AppTextStyles.bodyMd.copyWith(
-                              //     color: AppColors.onSurfaceVariant,
-                              //   ),
-                              // ),
-                              // SizedBox(height: AppDimensions.lg),
+                              // ── Category Filters ───────────────────
+                              if (feed.categorySections.isNotEmpty) ...[
+                                Text(
+                                  'Categories',
+                                  style: AppTextStyles.headlineMd.copyWith(
+                                    color: AppColors.onSurface,
+                                  ),
+                                ),
+                                SizedBox(height: AppDimensions.md),
+                                SizedBox(
+                                  height: AppDimensions.chipHeight + 8.h,
+                                  child: ValueListenableBuilder<String>(
+                                    valueListenable: _selectedCategoryNotifier,
+                                    builder: (context, selectedCategorySlug, _) {
+                                      return ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount:
+                                            feed.categorySections.length + 1,
+                                        itemBuilder: (context, index) {
+                                          // First chip is always "All"
+                                          if (index == 0) {
+                                            final isActive =
+                                                selectedCategorySlug == 'all';
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                right: AppDimensions.s,
+                                              ),
+                                              child: AppChip.filter(
+                                                label: 'All',
+                                                isActive: isActive,
+                                                activeColor: AppColors
+                                                    .primaryContainer,
+                                                onTap: () {
+                                                  _selectedCategoryNotifier
+                                                      .value = 'all';
+                                                },
+                                              ),
+                                            );
+                                          }
+
+                                          final category = feed
+                                              .categorySections[index - 1]
+                                              .category;
+                                          final isActive =
+                                              selectedCategorySlug ==
+                                                  category.slug;
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              right: AppDimensions.s,
+                                            ),
+                                            child: AppChip.filter(
+                                              label: category.name,
+                                              isActive: isActive,
+                                              activeColor: AppColors
+                                                  .primaryContainer,
+                                              onTap: () {
+                                                _selectedCategoryNotifier
+                                                    .value = category.slug;
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: AppDimensions.lg),
+                              ],
 
                               // ── Editor's Choice ────────────────────
                               if (feed.editorsChoice.isNotEmpty) ...[
@@ -144,77 +195,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 SizedBox(height: AppDimensions.lg),
                               ],
 
-                              // ── Category Filters ───────────────────
-                              if (feed.categorySections.isNotEmpty) ...[
-                                Text(
-                                  'Categories',
-                                  style: AppTextStyles.headlineMd.copyWith(
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.md),
-                                SizedBox(
-                                  height: AppDimensions.chipHeight + 8.h,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: feed.categorySections.length + 1,
-                                    itemBuilder: (context, index) {
-                                      // First chip is always "All"
-                                      if (index == 0) {
-                                        final isActive =
-                                            selectedCategorySlug == 'all';
-                                        return Padding(
-                                          padding: EdgeInsets.only(
-                                            right: AppDimensions.s,
-                                          ),
-                                          child: AppChip.filter(
-                                            label: 'All',
-                                            isActive: isActive,
-                                            activeColor:
-                                                AppColors.primaryContainer,
-                                            onTap: () {
-                                              setState(
-                                                () => selectedCategorySlug =
-                                                    'all',
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      }
-
-                                      final category = feed
-                                          .categorySections[index - 1]
-                                          .category;
-                                      final isActive =
-                                          selectedCategorySlug == category.slug;
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          right: AppDimensions.s,
-                                        ),
-                                        child: AppChip.filter(
-                                          label: category.name,
-                                          isActive: isActive,
-                                          activeColor:
-                                              AppColors.primaryContainer,
-                                          onTap: () {
-                                            setState(
-                                              () => selectedCategorySlug =
-                                                  category.slug,
-                                            );
-                                          },
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.lg),
-                              ],
-
                               // ── Selected Category / All Grid ───────
-                              _SelectedSectionView(
-                                feed: feed,
-                                selectedCategorySlug: selectedCategorySlug,
-                                onWallpaperTap: _onWallpaperTap,
+                              ValueListenableBuilder<String>(
+                                valueListenable: _selectedCategoryNotifier,
+                                builder: (context, selectedCategorySlug, _) {
+                                  return _SelectedSectionView(
+                                    feed: feed,
+                                    selectedCategorySlug: selectedCategorySlug,
+                                    onWallpaperTap: _onWallpaperTap,
+                                  );
+                                },
                               ),
 
                               SizedBox(height: AppDimensions.xl),

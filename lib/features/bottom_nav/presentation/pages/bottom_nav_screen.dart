@@ -46,28 +46,32 @@ class BottomNavScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = _navIndex(location);
 
+    // Hide AppBar if on search page
+    final isSearchPage = location.contains(RouteNames.search);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          SafeArea(
-            bottom: false,
-            child: CustomAppBar(
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search, color: AppColors.onSurface),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.notifications_none,
-                    color: AppColors.onSurface,
+          if (!isSearchPage)
+            SafeArea(
+              bottom: false,
+              child: CustomAppBar(
+                actions: [
+                  IconButton(
+                    onPressed: () => context.go(RouteNames.search),
+                    icon: const Icon(Icons.search, color: AppColors.onSurface),
                   ),
-                ),
-              ],
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.notifications_none,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           Expanded(
             child: child,
           ),
@@ -85,50 +89,44 @@ class BottomNavScreen extends StatelessWidget {
               ),
             ),
           ),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-            ),
-            child: BottomNavigationBar(
-              currentIndex: selectedIndex,
-              onTap: (index) => _onTap(context, index),
-              backgroundColor: AppColors.background,
-              selectedItemColor: AppColors.primaryContainer,
-              unselectedItemColor: AppColors.navInactive,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              type: BottomNavigationBarType.fixed,
-              elevation: 0,
-              enableFeedback: false,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search_outlined),
-                  activeIcon: Icon(Icons.search),
-                  label: 'Search',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.grid_view_outlined),
-                  activeIcon: Icon(Icons.grid_view),
-                  label: 'Categories',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite_border),
-                  activeIcon: Icon(Icons.favorite),
-                  label: 'Favourites',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
-            ),
+          child: BottomNavigationBar(
+            currentIndex: selectedIndex,
+            onTap: (index) => _onTap(context, index),
+            backgroundColor: AppColors.background,
+            selectedItemColor: AppColors.primaryContainer,
+            unselectedItemColor: AppColors.navInactive,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            type: BottomNavigationBarType.fixed,
+            elevation: 0,
+            enableFeedback: false,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search_outlined),
+                activeIcon: Icon(Icons.search),
+                label: 'Search',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.grid_view_outlined),
+                activeIcon: Icon(Icons.grid_view),
+                label: 'Categories',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite_border),
+                activeIcon: Icon(Icons.favorite),
+                label: 'Favourites',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
           ),
         ),
       ),
