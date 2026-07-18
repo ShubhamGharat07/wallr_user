@@ -136,7 +136,9 @@ class Profile extends StatelessWidget {
                           icon: Icons.download_rounded,
                           title: 'My Downloads',
                           trailing: '42',
-                          onTap: () {},
+                          onTap: () {
+                            context.go(RouteNames.downloads);
+                          },
                         ),
                         _Divider(),
                         _OptionItem(

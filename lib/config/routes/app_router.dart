@@ -84,6 +84,7 @@ import '../../features/search/presentation/pages/search.dart';
 import '../../features/splash/presentation/pages/splash_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_detail_screen.dart';
 import '../../features/wallpaper_detail/presentation/pages/wallpaper_preview_screen.dart';
+import '../../features/wallpaper_download/presentation/pages/my_downloads_page.dart';
 import 'route_names.dart';
 
 class WallpaperDetailExtras {
@@ -149,6 +150,10 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: 'profile',
               builder: (context, state) => const Profile(),
+            ),
+            GoRoute(
+              path: 'downloads',
+              builder: (context, state) => const MyDownloadsPage(),
             ),
           ],
         ),

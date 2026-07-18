@@ -129,6 +129,7 @@ import '../../features/search/presentation/bloc/search_bloc.dart';
 import '../../features/wallpaper_download/data/datasources/local_download_datasource.dart';
 import '../../features/wallpaper_download/data/repositories/download_repository_impl.dart';
 import '../../features/wallpaper_download/domain/repositories/download_repository.dart';
+import '../../features/wallpaper_download/presentation/bloc/downloads_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -270,5 +271,11 @@ Future<void> initDependencies() async {
       service: sl<WallpaperService>(),
       downloadRepository: sl<DownloadRepository>(),
     ),
+  );
+
+  // ── Downloads ────────────────────────────────────────────────
+  // Factory — one bloc per downloads page instance
+  sl.registerFactory(
+    () => DownloadsBloc(downloadRepository: sl<DownloadRepository>()),
   );
 }
