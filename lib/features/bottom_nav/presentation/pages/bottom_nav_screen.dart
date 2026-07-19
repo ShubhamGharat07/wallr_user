@@ -46,14 +46,15 @@ class BottomNavScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = _navIndex(location);
 
-    // Hide AppBar if on search page
+    // Hide AppBar if on search or downloads page
     final isSearchPage = location.contains(RouteNames.search);
+    final isDownloadsPage = location.contains(RouteNames.downloads);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          if (!isSearchPage)
+          if (!isSearchPage && !isDownloadsPage)
             SafeArea(
               bottom: false,
               child: CustomAppBar(

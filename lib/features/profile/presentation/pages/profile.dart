@@ -1,186 +1,220 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/di/injection_container.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
+import '../../../wallpaper_download/presentation/bloc/downloads_bloc.dart';
+import '../../../wallpaper_download/presentation/bloc/downloads_event.dart';
+import '../../../wallpaper_download/presentation/bloc/downloads_state.dart';
+import '../../../wallpaper_favourite/presentation/bloc/favorites_bloc.dart';
+import '../../../wallpaper_favourite/presentation/bloc/favorites_event.dart';
+import '../../../wallpaper_favourite/presentation/bloc/favorites_state.dart';
 
 class Profile extends StatelessWidget {
   const Profile({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: AppDimensions.lg),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<DownloadsBloc>()..add(const DownloadsRequested()),
+        ),
+        BlocProvider(
+          create: (_) => sl<FavoritesBloc>()..add(const FavoritesRequested()),
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: AppDimensions.lg),
 
-              // ── Profile Header ────────────────────────────────────
-              Container(
-                padding: EdgeInsets.all(AppDimensions.md),
-                child: Column(
-                  children: [
-                    // Avatar with simple gold border
-                    Container(
-                      width: 120.w,
-                      height: 120.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primaryContainer,
-                          width: 3.w,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        backgroundColor: AppColors.surfaceHigh,
-                        child: Icon(
-                          Icons.person,
-                          size: 56.w,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: AppDimensions.lg),
-
-                    // Name
-                    Text(
-                      'Alex Rivera',
-                      style: AppTextStyles.headlineMd.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-
-                    SizedBox(height: AppDimensions.xs),
-
-                    // Username
-                    Text(
-                      '@arivera',
-                      style: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-
-                    SizedBox(height: AppDimensions.md),
-
-                    // Premium Badge
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppDimensions.md,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          color: AppColors.primaryContainer,
-                          width: 1.w,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.shield_rounded,
-                            size: 16.w,
+                // ── Profile Header ────────────────────────────────────
+                Container(
+                  padding: EdgeInsets.all(AppDimensions.md),
+                  child: Column(
+                    children: [
+                      // Avatar with simple gold border
+                      Container(
+                        width: 120.w,
+                        height: 120.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
                             color: AppColors.primaryContainer,
+                            width: 3.w,
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'PREMIUM MEMBER',
-                            style: AppTextStyles.bodySm.copyWith(
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.surfaceHigh,
+                          child: Icon(
+                            Icons.person,
+                            size: 56.w,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: AppDimensions.lg),
+
+                      // Name
+                      Text(
+                        'Alex Rivera',
+                        style: AppTextStyles.headlineMd.copyWith(
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+
+                      SizedBox(height: AppDimensions.xs),
+
+                      // Username
+                      Text(
+                        '@arivera',
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+
+                      SizedBox(height: AppDimensions.md),
+
+                      // Premium Badge
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimensions.md,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryContainer.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(
+                            color: AppColors.primaryContainer,
+                            width: 1.w,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.shield_rounded,
+                              size: 16.w,
                               color: AppColors.primaryContainer,
-                              fontWeight: FontWeight.w600,
                             ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              'PREMIUM MEMBER',
+                              style: AppTextStyles.bodySm.copyWith(
+                                color: AppColors.primaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: AppDimensions.lg),
+
+                // ── Main Options ──────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
+                  child: Column(
+                    children: [
+                      // Options Card
+                      _OptionsCard(
+                        children: [
+                          BlocBuilder<FavoritesBloc, FavoritesState>(
+                            builder: (context, state) {
+                              String count = '0';
+                              if (state is FavoritesLoaded) {
+                                count = state.wallpapers.length.toString();
+                              }
+                              return _OptionItem(
+                                icon: Icons.favorite_rounded,
+                                title: 'My Favourites',
+                                trailing: count,
+                                onTap: () {
+                                  context.go(RouteNames.favourites);
+                                },
+                              );
+                            },
+                          ),
+                          _Divider(),
+                          _OptionItem(
+                            icon: Icons.collections_bookmark_rounded,
+                            title: 'My Collections',
+                            trailing: '12',
+                            onTap: () {},
+                          ),
+                          _Divider(),
+                          BlocBuilder<DownloadsBloc, DownloadsState>(
+                            builder: (context, state) {
+                              String count = '0';
+                              if (state is DownloadsLoaded) {
+                                count = state.wallpapers.length.toString();
+                              }
+                              return _OptionItem(
+                                icon: Icons.download_rounded,
+                                title: 'My Downloads',
+                                trailing: count,
+                                onTap: () {
+                                  context.go(RouteNames.downloads);
+                                },
+                              );
+                            },
+                          ),
+                          _Divider(),
+                          _OptionItem(
+                            icon: Icons.thumb_up_rounded,
+                            title: 'Liked by me',
+                            onTap: () {},
                           ),
                         ],
                       ),
-                    ),
-                  ],
+
+                      SizedBox(height: AppDimensions.md),
+
+                      // Settings Card
+                      _OptionsCard(
+                        children: [
+                          _OptionItem(
+                            icon: Icons.settings_rounded,
+                            title: 'Settings',
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: AppDimensions.md),
+
+                      // Sign Out Card
+                      _OptionsCard(
+                        children: [
+                          _OptionItem(
+                            icon: Icons.logout_rounded,
+                            title: 'Sign Out',
+                            isDestructive: true,
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              SizedBox(height: AppDimensions.lg),
-
-              // ── Main Options ──────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
-                child: Column(
-                  children: [
-                    // Options Card
-                    _OptionsCard(
-                      children: [
-                        _OptionItem(
-                          icon: Icons.favorite_rounded,
-                          title: 'My Favourites',
-                          trailing: '128',
-                          onTap: () {
-                            context.go(RouteNames.favourites);
-                          },
-                        ),
-                        _Divider(),
-                        _OptionItem(
-                          icon: Icons.collections_bookmark_rounded,
-                          title: 'My Collections',
-                          trailing: '12',
-                          onTap: () {},
-                        ),
-                        _Divider(),
-                        _OptionItem(
-                          icon: Icons.download_rounded,
-                          title: 'My Downloads',
-                          trailing: '42',
-                          onTap: () {
-                            context.go(RouteNames.downloads);
-                          },
-                        ),
-                        _Divider(),
-                        _OptionItem(
-                          icon: Icons.thumb_up_rounded,
-                          title: 'Liked by me',
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: AppDimensions.md),
-
-                    // Settings Card
-                    _OptionsCard(
-                      children: [
-                        _OptionItem(
-                          icon: Icons.settings_rounded,
-                          title: 'Settings',
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: AppDimensions.md),
-
-                    // Sign Out Card
-                    _OptionsCard(
-                      children: [
-                        _OptionItem(
-                          icon: Icons.logout_rounded,
-                          title: 'Sign Out',
-                          isDestructive: true,
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: AppDimensions.xl),
-            ],
+                SizedBox(height: AppDimensions.xl),
+              ],
+            ),
           ),
         ),
       ),

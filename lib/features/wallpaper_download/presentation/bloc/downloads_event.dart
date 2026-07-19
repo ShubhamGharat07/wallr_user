@@ -10,3 +10,12 @@ sealed class DownloadsEvent extends Equatable {
 class DownloadsRequested extends DownloadsEvent {
   const DownloadsRequested();
 }
+
+class DownloadDeleted extends DownloadsEvent {
+  final String wallpaperId;
+
+  const DownloadDeleted({required this.wallpaperId});
+
+  @override
+  List<Object?> get props => [wallpaperId];
+}

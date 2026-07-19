@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/services/wallpaper_service.dart';
 import '../../../wallpaper_download/domain/repositories/download_repository.dart';
+import '../../../wallpaper_favourite/domain/repositories/favorite_repository.dart';
 import 'wallpaper_actions_state.dart';
 
 /// Drives the per-wallpaper device actions on the detail screen:
@@ -14,16 +15,26 @@ import 'wallpaper_actions_state.dart';
 class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
   final WallpaperService _service;
   final DownloadRepository _downloadRepository;
+  final FavoriteRepository _favoriteRepository;
 
   WallpaperActionsCubit({
     required WallpaperService service,
     required DownloadRepository downloadRepository,
+    required FavoriteRepository favoriteRepository,
   })  : _service = service,
         _downloadRepository = downloadRepository,
+        _favoriteRepository = favoriteRepository,
         super(const WallpaperActionsState());
 
-  void toggleFavourite() {
-    emit(state.copyWith(isFavourited: !state.isFavourited));
+  Future<void> toggleFavourite(String wallpaperId) async {
+    final newState = !state.isFavourited;
+    emit(state.copyWith(isFavourited: newState));
+
+    if (newState) {
+      await _favoriteRepository.addFavorite(wallpaperId);
+    } else {
+      await _favoriteRepository.removeFavorite(wallpaperId);
+    }
   }
 
   /// Downloads the full image (in a background isolate) and applies it

@@ -14,6 +14,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
       : _downloadRepository = downloadRepository,
         super(const DownloadsInitial()) {
     on<DownloadsRequested>(_onDownloadsRequested);
+    on<DownloadDeleted>(_onDownloadDeleted);
   }
 
   Future<void> _onDownloadsRequested(
@@ -54,6 +55,27 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
         emit(DownloadsLoaded(wallpapers: wallpapers));
       },
     );
+  }
+
+  Future<void> _onDownloadDeleted(
+    DownloadDeleted event,
+    Emitter<DownloadsState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is DownloadsLoaded) {
+      final result = await _downloadRepository.deleteDownload(event.wallpaperId);
+      result.fold(
+        (failure) {
+          emit(DownloadsError(message: failure.message));
+        },
+        (_) {
+          final updatedWallpapers = currentState.wallpapers
+              .where((w) => w.id != event.wallpaperId)
+              .toList();
+          emit(DownloadsLoaded(wallpapers: updatedWallpapers));
+        },
+      );
+    }
   }
 }
 

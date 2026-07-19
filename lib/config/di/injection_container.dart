@@ -130,6 +130,9 @@ import '../../features/wallpaper_download/data/datasources/local_download_dataso
 import '../../features/wallpaper_download/data/repositories/download_repository_impl.dart';
 import '../../features/wallpaper_download/domain/repositories/download_repository.dart';
 import '../../features/wallpaper_download/presentation/bloc/downloads_bloc.dart';
+import '../../features/wallpaper_favourite/domain/repositories/favorite_repository.dart';
+import '../../features/wallpaper_favourite/data/repositories/favorite_repository_impl.dart';
+import '../../features/wallpaper_favourite/presentation/bloc/favorites_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -270,6 +273,7 @@ Future<void> initDependencies() async {
     () => WallpaperActionsCubit(
       service: sl<WallpaperService>(),
       downloadRepository: sl<DownloadRepository>(),
+      favoriteRepository: sl<FavoriteRepository>(),
     ),
   );
 
@@ -277,5 +281,17 @@ Future<void> initDependencies() async {
   // Factory — one bloc per downloads page instance
   sl.registerFactory(
     () => DownloadsBloc(downloadRepository: sl<DownloadRepository>()),
+  );
+
+  // ── Favorites ────────────────────────────────────────────────
+  sl.registerLazySingleton<FavoriteRepository>(
+    () => FavoriteRepositoryImpl(
+      firestore: sl<FirebaseFirestore>(),
+      auth: sl<FirebaseAuth>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => FavoritesBloc(favoriteRepository: sl<FavoriteRepository>()),
   );
 }

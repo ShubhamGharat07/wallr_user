@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../config/di/injection_container.dart';
 import '../../../../config/routes/app_router.dart';
 import '../../../../config/routes/route_names.dart';
@@ -253,6 +252,74 @@ class _ContentView extends StatelessWidget {
 
   const _ContentView({required this.wallpapers});
 
+  void _showOptionsDialog(BuildContext context, WallpaperEntity wallpaper) {
+    final bloc = context.read<DownloadsBloc>();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppDimensions.md,
+            vertical: AppDimensions.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Wallpaper Options',
+                style: AppTextStyles.headlineSm.copyWith(
+                  color: AppColors.onSurface,
+                ),
+              ),
+              SizedBox(height: AppDimensions.lg),
+              _DialogOptionItem(
+                icon: Icons.visibility_rounded,
+                label: 'View',
+                onTap: () {
+                  Navigator.pop(dialogContext);
+                  context.push(
+                    RouteNames.wallpaperDetail,
+                    extra: WallpaperDetailExtras(
+                      wallpaper: wallpaper,
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: AppDimensions.md),
+              _DialogOptionItem(
+                icon: Icons.share_rounded,
+                label: 'Share',
+                onTap: () {
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Share: ${wallpaper.title}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: AppDimensions.md),
+              _DialogOptionItem(
+                icon: Icons.delete_rounded,
+                label: 'Delete',
+                isDestructive: true,
+                onTap: () {
+                  Navigator.pop(dialogContext);
+                  bloc.add(DownloadDeleted(wallpaperId: wallpaper.id));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -272,12 +339,7 @@ class _ContentView extends StatelessWidget {
                 return _DownloadedWallpaperCard(
                   wallpaper: wallpaper,
                   onTap: () {
-                    context.push(
-                      RouteNames.wallpaperDetail,
-                      extra: WallpaperDetailExtras(
-                        wallpaper: wallpaper,
-                      ),
-                    );
+                    _showOptionsDialog(context, wallpaper);
                   },
                 );
               },
@@ -287,6 +349,58 @@ class _ContentView extends StatelessWidget {
         ),
         SliverToBoxAdapter(child: SizedBox(height: AppDimensions.xl)),
       ],
+    );
+  }
+}
+
+// ─── Dialog Option Item ────────────────────────────────────────────────────
+
+class _DialogOptionItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const _DialogOptionItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isDestructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: AppDimensions.md,
+        ),
+        decoration: BoxDecoration(
+          color: isDestructive
+              ? AppColors.error.withValues(alpha: 0.1)
+              : AppColors.background,
+          borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 24.w,
+              color: isDestructive ? AppColors.error : AppColors.primaryContainer,
+            ),
+            SizedBox(width: AppDimensions.md),
+            Text(
+              label,
+              style: AppTextStyles.bodyMd.copyWith(
+                color: isDestructive ? AppColors.error : AppColors.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -304,55 +418,17 @@ class _DownloadedWallpaperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        RepaintBoundary(
-          child: GestureDetector(
-            onTap: onTap,
-            child: WallpaperCard(
-              imageUrl: wallpaper.cardImageUrl,
-              title: wallpaper.title.isEmpty ? null : wallpaper.title,
-              resolution: wallpaper.resolution,
-              isPremium: wallpaper.isPremium,
-              onTap: onTap,
-            ),
-          ),
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: onTap,
+        child: WallpaperCard(
+          imageUrl: wallpaper.cardImageUrl,
+          title: wallpaper.title.isEmpty ? null : wallpaper.title,
+          resolution: wallpaper.resolution,
+          isPremium: wallpaper.isPremium,
+          onTap: onTap,
         ),
-        // Downloaded badge
-        Positioned(
-          top: AppDimensions.s,
-          right: AppDimensions.s,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.xs,
-              vertical: 2.h,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 12.w,
-                  color: AppColors.background,
-                ),
-                SizedBox(width: 2.w),
-                Text(
-                  'Downloaded',
-                  style: AppTextStyles.bodySm.copyWith(
-                    color: AppColors.background,
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -324,7 +324,7 @@ class _InfoPanel extends StatelessWidget {
               // Favourite button
               GestureDetector(
                 onTap: () =>
-                    context.read<WallpaperActionsCubit>().toggleFavourite(),
+                    context.read<WallpaperActionsCubit>().toggleFavourite(wallpaper.id),
                 child: Container(
                   width: AppDimensions.avatarSm,
                   height: AppDimensions.avatarSm,
