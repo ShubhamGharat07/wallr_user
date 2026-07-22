@@ -26,8 +26,12 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
         return Left(UnauthenticatedFailure('User not authenticated'));
       }
 
-      await _firestore.collection('favorites').add({
-        'userId': _userId,
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('favourites')
+          .doc(wallpaperId)
+          .set({
         'wallpaperId': wallpaperId,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -45,15 +49,12 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
         return Left(UnauthenticatedFailure('User not authenticated'));
       }
 
-      final query = await _firestore
-          .collection('favorites')
-          .where('userId', isEqualTo: _userId)
-          .where('wallpaperId', isEqualTo: wallpaperId)
-          .get();
-
-      for (var doc in query.docs) {
-        await doc.reference.delete();
-      }
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('favourites')
+          .doc(wallpaperId)
+          .delete();
 
       return const Right(null);
     } catch (e) {
@@ -66,14 +67,14 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
     try {
       if (_userId.isEmpty) return const Right(false);
 
-      final query = await _firestore
-          .collection('favorites')
-          .where('userId', isEqualTo: _userId)
-          .where('wallpaperId', isEqualTo: wallpaperId)
-          .limit(1)
+      final doc = await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('favourites')
+          .doc(wallpaperId)
           .get();
 
-      return Right(query.docs.isNotEmpty);
+      return Right(doc.exists);
     } catch (e) {
       return Left(ServerFailure('Failed to check favorite'));
     }
@@ -87,9 +88,9 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
       }
 
       final favoriteDocs = await _firestore
-          .collection('favorites')
-          .where('userId', isEqualTo: _userId)
-          .orderBy('createdAt', descending: true)
+          .collection('users')
+          .doc(_userId)
+          .collection('favourites')
           .get();
 
       final wallpaperIds =
@@ -120,12 +121,12 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
       if (_userId.isEmpty) return const Right(0);
 
       final query = await _firestore
-          .collection('favorites')
-          .where('userId', isEqualTo: _userId)
-          .count()
+          .collection('users')
+          .doc(_userId)
+          .collection('favourites')
           .get();
 
-      return Right(query.count ?? 0);
+      return Right(query.docs.length);
     } catch (e) {
       return Left(ServerFailure('Failed to get favorites count'));
     }

@@ -26,6 +26,18 @@ class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
         _favoriteRepository = favoriteRepository,
         super(const WallpaperActionsState());
 
+  Future<void> checkIfFavorited(String wallpaperId) async {
+    final result = await _favoriteRepository.isFavorited(wallpaperId);
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isFavourited: false));
+      },
+      (isFavorited) {
+        emit(state.copyWith(isFavourited: isFavorited));
+      },
+    );
+  }
+
   Future<void> toggleFavourite(String wallpaperId) async {
     final newState = !state.isFavourited;
     emit(state.copyWith(isFavourited: newState));

@@ -57,18 +57,32 @@ class WallpaperDetailScreen extends StatelessWidget {
   }
 }
 
-class _DetailView extends StatelessWidget {
+class _DetailView extends StatefulWidget {
   final WallpaperEntity wallpaper;
   final List<WallpaperEntity> relatedWallpapers;
 
   const _DetailView({required this.wallpaper, required this.relatedWallpapers});
 
+  @override
+  State<_DetailView> createState() => _DetailViewState();
+}
+
+class _DetailViewState extends State<_DetailView> {
+  @override
+  void initState() {
+    super.initState();
+    // Check if wallpaper is favorited when screen loads
+    Future.microtask(() {
+      context.read<WallpaperActionsCubit>().checkIfFavorited(widget.wallpaper.id);
+    });
+  }
+
   /// Resolves the public id from a Cloudinary URL, or returns the value
   /// as-is if it's already a public id. The detail/full image is built
   /// through [ImageUtils] for an optimised, device-appropriate fetch.
-  String get _heroImageUrl => wallpaper.imageUrl.isNotEmpty
-      ? wallpaper.imageUrl
-      : wallpaper.cardImageUrl;
+  String get _heroImageUrl => widget.wallpaper.imageUrl.isNotEmpty
+      ? widget.wallpaper.imageUrl
+      : widget.wallpaper.cardImageUrl;
 
   Future<void> _onSetWallpaper(BuildContext context) async {
     final target = await SetWallpaperSheet.show(context);
@@ -76,7 +90,7 @@ class _DetailView extends StatelessWidget {
 
     await context.read<WallpaperActionsCubit>().setWallpaper(
       imageUrl: _heroImageUrl,
-      wallpaperId: wallpaper.id,
+      wallpaperId: widget.wallpaper.id,
       target: target,
     );
   }
@@ -84,13 +98,13 @@ class _DetailView extends StatelessWidget {
   Future<void> _onDownload(BuildContext context) async {
     await context.read<WallpaperActionsCubit>().downloadWallpaper(
       imageUrl: _heroImageUrl,
-      wallpaperId: wallpaper.id,
-      fileName: wallpaper.title.isEmpty ? 'wallpaper' : wallpaper.title,
+      wallpaperId: widget.wallpaper.id,
+      fileName: widget.wallpaper.title.isEmpty ? 'wallpaper' : widget.wallpaper.title,
     );
   }
 
   void _onPreview(BuildContext context) {
-    context.push(RouteNames.wallpaperPreview, extra: wallpaper);
+    context.push(RouteNames.wallpaperPreview, extra: widget.wallpaper);
   }
 
   /// Opens another detail screen for a tapped "More like this" card,
@@ -104,8 +118,8 @@ class _DetailView extends StatelessWidget {
   /// `context.push(RouteNames.wallpaperDetail, extra: ...)` instead.
   void _onTapRelated(BuildContext context, WallpaperEntity target) {
     final siblings = [
-      wallpaper,
-      ...relatedWallpapers,
+      widget.wallpaper,
+      ...widget.relatedWallpapers,
     ].where((w) => w.id != target.id).toList();
 
     Navigator.of(context).push(
@@ -157,9 +171,9 @@ class _DetailView extends StatelessWidget {
                 snapSizes: const [0.55, 0.85],
                 builder: (context, scrollController) {
                   return _InfoPanel(
-                    wallpaper: wallpaper,
+                    wallpaper: widget.wallpaper,
                     state: state,
-                    relatedWallpapers: relatedWallpapers,
+                    relatedWallpapers: widget.relatedWallpapers,
                     scrollController: scrollController,
                     onPreview: () => _onPreview(context),
                     onSetWallpaper: () => _onSetWallpaper(context),

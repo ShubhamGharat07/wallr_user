@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../../config/di/injection_container.dart';
+import '../../../../config/di/injection_container.dart'; 
 import '../../../../config/routes/app_router.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
@@ -187,7 +186,7 @@ class _ErrorView extends StatelessWidget {
             ),
             SizedBox(height: AppDimensions.xs),
             Text(
-              message,
+              message.isEmpty ? 'Please try again' : message,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMdMuted,
             ),
@@ -195,6 +194,14 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton(
               onPressed: onRetry,
               child: const Text('Retry'),
+            ),
+            SizedBox(height: AppDimensions.md),
+            Text(
+              'Make sure you are logged in',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySm.copyWith(
+                color: AppColors.navInactive,
+              ),
             ),
           ],
         ),
