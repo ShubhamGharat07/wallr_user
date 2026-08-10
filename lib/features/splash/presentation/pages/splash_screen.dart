@@ -78,15 +78,19 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background
+          // Background Image
+          Image.asset('assets/Splashscreen.jpg', fit: BoxFit.cover),
+
+          // Dark overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.black,
-                  const Color(0xFF1A1A1A),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.4),
+                  Colors.black.withValues(alpha: 0.7),
                 ],
               ),
             ),
@@ -101,6 +105,8 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    SizedBox(height: 30.h),
+
                     // App Logo
                     Container(
                       width: 80.w,
@@ -117,7 +123,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFF5C518).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFF5C518,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 20,
                             spreadRadius: 5,
                           ),
@@ -158,23 +166,52 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // Loading indicator at bottom
+          // Bottom text and loading indicator
           Positioned(
-            bottom: 60.h,
+            bottom: 0,
             left: 0,
             right: 0,
             child: FadeTransition(
               opacity: _fadeAnimation,
-              child: Center(
-                child: SizedBox(
-                  width: 40.w,
-                  height: 40.w,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primaryContainer,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 50.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // WALLR text
+                    Text(
+                      'WALLR',
+                      style: AppTextStyles.headlineLgMobile.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
                     ),
-                  ),
+
+                    SizedBox(height: 8.h),
+
+                    // Premium tagline
+                    Text(
+                      'Premium 4K Wallpapers',
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // Progress indicator
+                    SizedBox(
+                      width: 40.w,
+                      height: 40.w,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          const Color(0xFFF5C518),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

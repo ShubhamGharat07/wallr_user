@@ -133,6 +133,14 @@ import '../../features/wallpaper_download/presentation/bloc/downloads_bloc.dart'
 import '../../features/wallpaper_favourite/domain/repositories/favorite_repository.dart';
 import '../../features/wallpaper_favourite/data/repositories/favorite_repository_impl.dart';
 import '../../features/wallpaper_favourite/presentation/bloc/favorites_bloc.dart';
+import '../../features/notification/data/datasources/notification_remote_datasource.dart';
+import '../../features/notification/data/repositories/notification_repository_impl.dart';
+import '../../features/notification/domain/repositories/notification_repository.dart';
+import '../../features/notification/domain/usecases/clear_notifications_usecase.dart';
+import '../../features/notification/domain/usecases/delete_notification_usecase.dart';
+import '../../features/notification/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notification/domain/usecases/mark_notification_read_usecase.dart';
+import '../../features/notification/presentation/bloc/notification_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -293,5 +301,32 @@ Future<void> initDependencies() async {
 
   sl.registerFactory(
     () => FavoritesBloc(favoriteRepository: sl<FavoriteRepository>()),
+  );
+
+  // ── Notifications ──────────────────────────────────────────────
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(
+      firestore: sl<FirebaseFirestore>(),
+    ),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      remoteDataSource: sl<NotificationRemoteDataSource>(),
+      networkInfo: sl<NetworkInfo>(),
+      auth: sl<FirebaseAuth>(),
+    ),
+  );
+  sl.registerLazySingleton(() => GetNotificationsUseCase(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => MarkNotificationReadUseCase(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => DeleteNotificationUseCase(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => ClearNotificationsUseCase(sl<NotificationRepository>()));
+
+  sl.registerFactory(
+    () => NotificationBloc(
+      getNotifications: sl<GetNotificationsUseCase>(),
+      markAsRead: sl<MarkNotificationReadUseCase>(),
+      deleteNotification: sl<DeleteNotificationUseCase>(),
+      clearNotifications: sl<ClearNotificationsUseCase>(),
+    ),
   );
 }

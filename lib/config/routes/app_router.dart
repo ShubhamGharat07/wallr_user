@@ -78,6 +78,8 @@ import '../../features/favourites/presentation/pages/favourites.dart';
 import '../../features/home/domain/entities/wallpaper_entity.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/home/presentation/pages/home_screen.dart';
+import '../../features/notification/presentation/bloc/notification_bloc.dart';
+import '../../features/notification/presentation/pages/notification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_screen.dart';
 import '../../features/profile/presentation/pages/profile.dart';
 import '../../features/search/presentation/pages/search.dart';
@@ -125,8 +127,10 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     ShellRoute(
-      builder: (context, state, child) =>
-          BottomNavScreen(child: child, location: state.uri.toString()),
+      builder: (context, state, child) => BlocProvider<NotificationBloc>(
+        create: (_) => sl<NotificationBloc>(),
+        child: BottomNavScreen(child: child, location: state.uri.toString()),
+      ),
       routes: [
         GoRoute(
           path: RouteNames.home,
@@ -154,6 +158,25 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: 'downloads',
               builder: (context, state) => const MyDownloadsPage(),
+            ),
+            GoRoute(
+              path: 'notifications',
+              pageBuilder: (context, state) => CustomTransitionPage(
+                key: state.pageKey,
+                child: const NotificationPage(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: child,
+                  );
+                },
+              ),
             ),
           ],
         ),

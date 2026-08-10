@@ -65,6 +65,10 @@ dependencies:
   purchases_flutter: ^10.2.0
   async_wallpaper: ^2.1.0
   feather_icons: ^1.2.0
+  firebase_messaging: ^16.1.0
+  flutter_local_notifications: ^18.0.0
+  timeago: ^3.7.0
+  flutter_slidable: ^4.0.0
 
 dev_dependencies:
   flutter_test:

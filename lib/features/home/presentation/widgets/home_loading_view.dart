@@ -20,21 +20,22 @@ class HomeLoadingView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppShimmer.text(width: 160.w, height: 28.h),
-          SizedBox(height: AppDimensions.xs),
-          AppShimmer.text(width: 200.w, height: 16.h),
-          SizedBox(height: AppDimensions.lg),
-          AppShimmer.text(width: 140.w, height: 22.h),
+          // ── Editor's Choice Section ────────────────────
+          AppShimmer.text(width: 140.w, height: 24.h),
           SizedBox(height: AppDimensions.md),
           _HorizontalShimmerRow(height: 300.h, cardWidth: 220.w),
           SizedBox(height: AppDimensions.lg),
-          AppShimmer.text(width: 120.w, height: 22.h),
+
+          // ── Categories Section ─────────────────────────
+          AppShimmer.text(width: 120.w, height: 24.h),
           SizedBox(height: AppDimensions.md),
-          _HorizontalShimmerRow(height: 220.h, cardWidth: 160.w),
+          _CategoryChipsShimmer(),
           SizedBox(height: AppDimensions.lg),
-          AppShimmer.text(width: 120.w, height: 22.h),
+
+          // ── All Wallpapers Grid ────────────────────────
+          AppShimmer.text(width: 160.w, height: 24.h),
           SizedBox(height: AppDimensions.md),
-          _HorizontalShimmerRow(height: 220.h, cardWidth: 160.w),
+          _GridShimmerRow(),
         ],
       ),
     );
@@ -59,6 +60,49 @@ class _HorizontalShimmerRow extends StatelessWidget {
           padding: EdgeInsets.only(right: AppDimensions.md),
           child: AppShimmer(width: cardWidth, height: height),
         ),
+      ),
+    );
+  }
+}
+
+class _CategoryChipsShimmer extends StatelessWidget {
+  const _CategoryChipsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppDimensions.chipHeight + 8.h,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 5,
+        itemBuilder: (_, i) => Padding(
+          padding: EdgeInsets.only(right: AppDimensions.s),
+          child: AppShimmer(width: 80.w, height: AppDimensions.chipHeight),
+        ),
+      ),
+    );
+  }
+}
+
+class _GridShimmerRow extends StatelessWidget {
+  const _GridShimmerRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: AppDimensions.gridColumnCount,
+        crossAxisSpacing: AppDimensions.md,
+        mainAxisSpacing: AppDimensions.md,
+        childAspectRatio: 0.65,
+      ),
+      itemCount: 6,
+      itemBuilder: (_, i) => AppShimmer(
+        width: double.infinity,
+        height: 300.h,
       ),
     );
   }

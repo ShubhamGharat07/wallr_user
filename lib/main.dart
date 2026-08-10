@@ -8,10 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallr/config/di/injection_container.dart';
 
 import 'config/routes/app_router.dart';
+import 'core/services/fcm_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
 import 'features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
 import 'features/onboarding/presentation/bloc/onboarding_cubit.dart';
+
+final fcmService = FcmService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +24,8 @@ Future<void> main() async {
   await GoogleSignIn.instance.initialize();
 
   await initDependencies();
+
+  await fcmService.initialize();
 
   runApp(const MyApp());
 }

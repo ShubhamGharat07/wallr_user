@@ -8,6 +8,7 @@ abstract final class RouteNames {
   static const String favourites = '/home/favourites';
   static const String profile = '/home/profile';
   static const String downloads = '/home/downloads';
+  static const String notifications = '/home/notifications';
 
   /// Wallpaper detail — pushed with a [WallpaperEntity] via `extra`.
   static const String wallpaperDetail = '/wallpaper';

@@ -10,6 +10,8 @@ import '../../../../core/constants/text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_chip.dart';
 import '../../../../core/widgets/wallpaper_card.dart';
+import '../../../notification/presentation/bloc/notification_bloc.dart';
+import '../../../notification/presentation/bloc/notification_state.dart';
 import '../../domain/entities/home_feed_entity.dart';
 import '../../domain/entities/wallpaper_entity.dart';
 import '../bloc/home_bloc.dart';
@@ -139,57 +141,62 @@ class _HomeScreenState extends State<HomeScreen> {
                                   height: AppDimensions.chipHeight + 8.h,
                                   child: ValueListenableBuilder<String>(
                                     valueListenable: _selectedCategoryNotifier,
-                                    builder: (context, selectedCategorySlug, _) {
-                                      return ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount:
-                                            feed.categorySections.length + 1,
-                                        itemBuilder: (context, index) {
-                                          // First chip is always "All"
-                                          if (index == 0) {
-                                            final isActive =
-                                                selectedCategorySlug == 'all';
-                                            return Padding(
-                                              padding: EdgeInsets.only(
-                                                right: AppDimensions.s,
-                                              ),
-                                              child: AppChip.filter(
-                                                label: 'All',
-                                                isActive: isActive,
-                                                activeColor: AppColors
-                                                    .primaryContainer,
-                                                onTap: () {
-                                                  _selectedCategoryNotifier
-                                                      .value = 'all';
-                                                },
-                                              ),
-                                            );
-                                          }
+                                    builder:
+                                        (context, selectedCategorySlug, _) {
+                                          return ListView.builder(
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount:
+                                                feed.categorySections.length +
+                                                1,
+                                            itemBuilder: (context, index) {
+                                              // First chip is always "All"
+                                              if (index == 0) {
+                                                final isActive =
+                                                    selectedCategorySlug ==
+                                                    'all';
+                                                return Padding(
+                                                  padding: EdgeInsets.only(
+                                                    right: AppDimensions.s,
+                                                  ),
+                                                  child: AppChip.filter(
+                                                    label: 'All',
+                                                    isActive: isActive,
+                                                    activeColor: AppColors
+                                                        .primaryContainer,
+                                                    onTap: () {
+                                                      _selectedCategoryNotifier
+                                                              .value =
+                                                          'all';
+                                                    },
+                                                  ),
+                                                );
+                                              }
 
-                                          final category = feed
-                                              .categorySections[index - 1]
-                                              .category;
-                                          final isActive =
-                                              selectedCategorySlug ==
+                                              final category = feed
+                                                  .categorySections[index - 1]
+                                                  .category;
+                                              final isActive =
+                                                  selectedCategorySlug ==
                                                   category.slug;
-                                          return Padding(
-                                            padding: EdgeInsets.only(
-                                              right: AppDimensions.s,
-                                            ),
-                                            child: AppChip.filter(
-                                              label: category.name,
-                                              isActive: isActive,
-                                              activeColor: AppColors
-                                                  .primaryContainer,
-                                              onTap: () {
-                                                _selectedCategoryNotifier
-                                                    .value = category.slug;
-                                              },
-                                            ),
+                                              return Padding(
+                                                padding: EdgeInsets.only(
+                                                  right: AppDimensions.s,
+                                                ),
+                                                child: AppChip.filter(
+                                                  label: category.name,
+                                                  isActive: isActive,
+                                                  activeColor: AppColors
+                                                      .primaryContainer,
+                                                  onTap: () {
+                                                    _selectedCategoryNotifier
+                                                            .value =
+                                                        category.slug;
+                                                  },
+                                                ),
+                                              );
+                                            },
                                           );
                                         },
-                                      );
-                                    },
                                   ),
                                 ),
                                 SizedBox(height: AppDimensions.lg),

@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../../../config/routes/route_names.dart';
+import '../../../notification/presentation/bloc/notification_bloc.dart';
+import '../../../notification/presentation/bloc/notification_event.dart';
+import '../../../notification/presentation/bloc/notification_state.dart';
 
-class BottomNavScreen extends StatelessWidget {
+class BottomNavScreen extends StatefulWidget {
+  final Widget child;
+  final String location;
+
   const BottomNavScreen({
     super.key,
     required this.child,
     required this.location,
   });
 
-  final Widget child;
-  final String location;
+  @override
+  State<BottomNavScreen> createState() => _BottomNavScreenState();
+}
+
+class _BottomNavScreenState extends State<BottomNavScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotificationBloc>().add(const NotificationsRequested());
+  }
 
   int _navIndex(String location) {
     if (location.startsWith(RouteNames.profile)) return 4;
@@ -44,17 +59,19 @@ class BottomNavScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = _navIndex(location);
+    final selectedIndex = _navIndex(widget.location);
 
-    // Hide AppBar if on search or downloads page
-    final isSearchPage = location.contains(RouteNames.search);
-    final isDownloadsPage = location.contains(RouteNames.downloads);
+    // Hide AppBar on search, downloads and notifications pages
+    final isSearchPage = widget.location.contains(RouteNames.search);
+    final isDownloadsPage = widget.location.contains(RouteNames.downloads);
+    final isNotificationsPage =
+        widget.location.contains(RouteNames.notifications);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          if (!isSearchPage && !isDownloadsPage)
+          if (!isSearchPage && !isDownloadsPage && !isNotificationsPage)
             SafeArea(
               bottom: false,
               child: CustomAppBar(
@@ -63,17 +80,57 @@ class BottomNavScreen extends StatelessWidget {
                     onPressed: () => context.go(RouteNames.search),
                     icon: const Icon(Icons.search, color: AppColors.onSurface),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_none,
-                      color: AppColors.onSurface,
-                    ),
+                  BlocBuilder<NotificationBloc, NotificationState>(
+                    builder: (context, state) {
+                      final unreadCount = switch (state) {
+                        NotificationLoaded(notifications: final items) =>
+                          items.where((n) => !n.isRead).length,
+                        _ => 0,
+                      };
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            onPressed: () =>
+                                context.go(RouteNames.notifications),
+                            icon: const Icon(
+                              Icons.notifications_none,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          if (unreadCount > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  '$unreadCount',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.background,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
             ),
-          Expanded(child: child),
+          Expanded(child: widget.child),
         ],
       ),
       bottomNavigationBar: SafeArea(
