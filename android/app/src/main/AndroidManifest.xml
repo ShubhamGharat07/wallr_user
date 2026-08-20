@@ -33,6 +33,24 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Deep links: https://wallr.app/wallpaper/{id} (Android App Links).
+                 Production requires /.well-known/assetlinks.json on the host —
+                 until it's deployed, the custom scheme filter below keeps
+                 shares working. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="wallr.app" android:pathPrefix="/wallpaper"/>
+                <data android:scheme="http" android:host="wallr.app" android:pathPrefix="/wallpaper"/>
+            </intent-filter>
+            <!-- Deep links: wallr://wallpaper/{id} (always works, no domain needed) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="wallr" android:host="wallpaper"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

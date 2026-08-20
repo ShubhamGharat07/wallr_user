@@ -9,6 +9,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
+import '../../../../core/services/share_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../home/domain/entities/wallpaper_entity.dart';
@@ -73,7 +74,9 @@ class _DetailViewState extends State<_DetailView> {
     super.initState();
     // Check if wallpaper is favorited when screen loads
     Future.microtask(() {
-      context.read<WallpaperActionsCubit>().checkIfFavorited(widget.wallpaper.id);
+      context.read<WallpaperActionsCubit>().checkIfFavorited(
+        widget.wallpaper.id,
+      );
     });
   }
 
@@ -99,7 +102,9 @@ class _DetailViewState extends State<_DetailView> {
     await context.read<WallpaperActionsCubit>().downloadWallpaper(
       imageUrl: _heroImageUrl,
       wallpaperId: widget.wallpaper.id,
-      fileName: widget.wallpaper.title.isEmpty ? 'wallpaper' : widget.wallpaper.title,
+      fileName: widget.wallpaper.title.isEmpty
+          ? 'wallpaper'
+          : widget.wallpaper.title,
     );
   }
 
@@ -205,17 +210,8 @@ class _DetailViewState extends State<_DetailView> {
                         color: Colors.white,
                         size: 20,
                       ),
-                      onTap: () {
-                        ScaffoldMessenger.of(context)
-                          ..hideCurrentSnackBar()
-                          ..showSnackBar(
-                            SnackBar(
-                              content: const Text('Sharing coming soon.'),
-                              backgroundColor: AppColors.surfaceHigh,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                      },
+                      onTap: () =>
+                          sl<ShareService>().shareWallpaper(widget.wallpaper),
                     ),
                   ],
                 ),
@@ -337,8 +333,9 @@ class _InfoPanel extends StatelessWidget {
               SizedBox(width: AppDimensions.s),
               // Favourite button
               GestureDetector(
-                onTap: () =>
-                    context.read<WallpaperActionsCubit>().toggleFavourite(wallpaper.id),
+                onTap: () => context
+                    .read<WallpaperActionsCubit>()
+                    .toggleFavourite(wallpaper.id),
                 child: Container(
                   width: AppDimensions.avatarSm,
                   height: AppDimensions.avatarSm,
@@ -408,10 +405,7 @@ class _InfoPanel extends StatelessWidget {
               ),
               SizedBox(width: AppDimensions.md),
               Expanded(
-                child: _DownloadButton(
-                  state: state,
-                  onTap: onDownload,
-                ),
+                child: _DownloadButton(state: state, onTap: onDownload),
               ),
             ],
           ),
@@ -442,10 +436,7 @@ class _DownloadButton extends StatelessWidget {
   final WallpaperActionsState state;
   final VoidCallback onTap;
 
-  const _DownloadButton({
-    required this.state,
-    required this.onTap,
-  });
+  const _DownloadButton({required this.state, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -454,43 +445,50 @@ class _DownloadButton extends StatelessWidget {
 
     // Show progress % when downloading
     if (isDownloading) {
-      return Stack(
-        children: [
-          // Background bar with progress
-          Container(
-            height: AppDimensions.buttonHeight,
-            decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
-              border: Border.all(
-                color: AppColors.primaryContainer,
-                width: 1.5,
+      return SizedBox(
+        height: AppDimensions.buttonHeight,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background bar with progress fill
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                AppDimensions.containerRadius,
               ),
-            ),
-            // Progress fill
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
               child: LinearProgressIndicator(
                 value: downloadProgress,
-                backgroundColor: Colors.transparent,
+                backgroundColor: AppColors.surfaceHigh,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.primaryContainer.withValues(alpha: 0.3),
+                  AppColors.primaryContainer.withValues(alpha: 0.35),
                 ),
-                minHeight: AppDimensions.buttonHeight,
               ),
             ),
-          ),
-          // Progress text
-          Center(
-            child: Text(
-              '${(downloadProgress * 100).toStringAsFixed(0)}%',
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.primaryContainer,
-                fontWeight: FontWeight.w600,
+            // Border on top of the fill
+            IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.containerRadius,
+                  ),
+                  border: Border.all(
+                    color: AppColors.primaryContainer,
+                    width: 1.5,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+            // Progress text — dead center of the button
+            Center(
+              child: Text(
+                '${(downloadProgress * 100).toStringAsFixed(0)}%',
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -502,10 +500,7 @@ class _DownloadButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceHigh,
           borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
-          border: Border.all(
-            color: AppColors.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.outlineVariant, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -635,10 +630,7 @@ class _MoreLikeThisGrid extends StatelessWidget {
   final List<WallpaperEntity> wallpapers;
   final ValueChanged<WallpaperEntity> onTap;
 
-  const _MoreLikeThisGrid({
-    required this.wallpapers,
-    required this.onTap,
-  });
+  const _MoreLikeThisGrid({required this.wallpapers, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -657,7 +649,9 @@ class _MoreLikeThisGrid extends StatelessWidget {
                 onTap: () => onTap(wallpaper),
                 child: RepaintBoundary(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.cardRadius,
+                    ),
                     child: CachedNetworkImage(
                       imageUrl: wallpaper.cardImageUrl,
                       fit: BoxFit.cover,
@@ -667,9 +661,8 @@ class _MoreLikeThisGrid extends StatelessWidget {
                       memCacheHeight: 240,
                       maxWidthDiskCache: 200,
                       maxHeightDiskCache: 300,
-                      placeholder: (_, _) => Container(
-                        color: AppColors.surface,
-                      ),
+                      placeholder: (_, _) =>
+                          Container(color: AppColors.surface),
                       errorWidget: (_, _, _) => Container(
                         color: AppColors.cardSurface,
                         child: Icon(
@@ -744,4 +737,3 @@ class _InfoItem extends StatelessWidget {
     );
   }
 }
-

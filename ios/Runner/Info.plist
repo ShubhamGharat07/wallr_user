@@ -50,5 +50,17 @@
 	<string>We need access to your photo library to save downloaded wallpapers.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need permission to save wallpapers to your photo library.</string>
+	<!-- Deep links: wallr://wallpaper/{id} -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.wallr.app.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wallr</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -69,7 +69,7 @@
 //   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl<AuthRepository>()));
 //   sl.registerLazySingleton(() => SignOutUseCase(sl<AuthRepository>()));
 
-//   // Auth BLoC — registerFactory kyunki har baar naya instance chahiye
+//   // Auth BLoC — registerFactory since a fresh instance is needed each time
 //   sl.registerFactory(
 //     () => AuthBloc(
 //       signInWithEmail: sl<SignInWithEmailUseCase>(),
@@ -91,6 +91,8 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/network/network_info.dart';
+import '../../core/services/deep_link_service.dart';
+import '../../core/services/share_service.dart';
 import '../../core/services/wallpaper_service.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -115,6 +117,7 @@ import '../../features/home/data/datasources/home_remote_datasource.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_feed_usecase.dart';
+import '../../features/home/domain/usecases/get_wallpaper_by_id_usecase.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/onboarding/data/datasources/onboarding_local_datasource.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
@@ -190,7 +193,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => SignOutUseCase(sl<AuthRepository>()));
 
-  // Auth BLoC — registerFactory kyunki har baar naya instance chahiye
+  // Auth BLoC — registerFactory since a fresh instance is needed each time
   sl.registerFactory(
     () => AuthBloc(
       signInWithEmail: sl<SignInWithEmailUseCase>(),
@@ -213,8 +216,9 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton(() => GetHomeFeedUseCase(sl<HomeRepository>()));
+  sl.registerLazySingleton(() => GetWallpaperByIdUseCase(sl<HomeRepository>()));
 
-  // Home BLoC — registerFactory kyunki har baar naya instance chahiye
+  // Home BLoC — registerFactory since a fresh instance is needed each time
   sl.registerFactory(() => HomeBloc(getHomeFeed: sl<GetHomeFeedUseCase>()));
 
   // ── Categories ───────────────────────────────────────────────
@@ -229,7 +233,7 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl<CategoriesRepository>()));
 
-  // Categories BLoC — registerFactory kyunki har baar naya instance chahiye
+  // Categories BLoC — registerFactory since a fresh instance is needed each time
   sl.registerFactory(() => CategoriesBloc(getCategories: sl<GetCategoriesUseCase>()));
 
   // ── Category Detail ──────────────────────────────────────────
@@ -244,7 +248,7 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => GetWallpapersByCategoryUseCase(sl<CategoryDetailRepository>()));
 
-  // Category Detail BLoC — registerFactory kyunki har baar naya instance chahiye
+  // Category Detail BLoC — registerFactory since a fresh instance is needed each time
   sl.registerFactory(() => CategoryDetailBloc(getWallpapers: sl<GetWallpapersByCategoryUseCase>()));
 
   // ── Search ───────────────────────────────────────────────────
@@ -259,11 +263,17 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => SearchUseCase(repository: sl<SearchRepository>()));
 
-  // Search BLoC — registerFactory kyunki har baar naya instance chahiye
+  // Search BLoC — registerFactory since a fresh instance is needed each time
   sl.registerFactory(() => SearchBloc(searchUseCase: sl<SearchUseCase>()));
 
   // ── Wallpaper Detail / Actions ───────────────────────────────
   sl.registerLazySingleton<WallpaperService>(() => WallpaperService());
+
+  // ── Deep links / Share ───────────────────────────────────────
+  sl.registerLazySingleton(() => DeepLinkService());
+  sl.registerLazySingleton(
+    () => ShareService(deepLinkService: sl<DeepLinkService>()),
+  );
 
   // Download Repository
   sl.registerLazySingleton<LocalDownloadDataSource>(

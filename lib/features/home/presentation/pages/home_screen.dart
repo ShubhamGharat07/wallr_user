@@ -1,3 +1,5 @@
+// lib/features/home/presentation/pages/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,8 +12,6 @@ import '../../../../core/constants/text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_chip.dart';
 import '../../../../core/widgets/wallpaper_card.dart';
-import '../../../notification/presentation/bloc/notification_bloc.dart';
-import '../../../notification/presentation/bloc/notification_state.dart';
 import '../../domain/entities/home_feed_entity.dart';
 import '../../domain/entities/wallpaper_entity.dart';
 import '../bloc/home_bloc.dart';
@@ -20,6 +20,11 @@ import '../bloc/home_state.dart';
 import '../widgets/category_coming_soon_card.dart';
 import '../widgets/category_icon_map.dart';
 import '../widgets/home_loading_view.dart';
+
+/// Pre-builds a bit ahead of the viewport (~2 rows of cards) so images start
+/// loading slightly BEFORE they scroll into view — keeps fast scrolling
+/// buttery smooth without ever building the whole grid.
+const _gridCacheExtent = 800.0;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -78,146 +83,148 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: AppColors.surface,
                   onRefresh: _onRefresh,
                   child: CustomScrollView(
+                    // Lazy loading: only slivers near the viewport (+ this
+                    // cache extent) are built; the rest stay virtual.
+                    cacheExtent: _gridCacheExtent,
                     slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppDimensions.md,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // ── Editor's Choice ────────────────────
-                              if (feed.editorsChoice.isNotEmpty) ...[
-                                Text(
-                                  'Editor\'s Choice',
-                                  style: AppTextStyles.headlineMd.copyWith(
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.md),
-                                SizedBox(
-                                  height: 300.h,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: feed.editorsChoice.length,
-                                    itemBuilder: (context, index) {
-                                      final wallpaper =
-                                          feed.editorsChoice[index];
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          right: AppDimensions.md,
-                                        ),
-                                        child: SizedBox(
-                                          width: 220.w,
-                                          child: WallpaperCard(
-                                            imageUrl: wallpaper.cardImageUrl,
-                                            title: wallpaper.title.isEmpty
-                                                ? null
-                                                : wallpaper.title,
-                                            resolution: wallpaper.resolution,
-                                            isPremium: wallpaper.isPremium,
-                                            onTap: () =>
-                                                _onWallpaperTap(wallpaper),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.lg),
-                              ],
-
-                              // ── Category Filters ───────────────────
-                              if (feed.categorySections.isNotEmpty) ...[
-                                Text(
-                                  'Categories',
-                                  style: AppTextStyles.headlineMd.copyWith(
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.md),
-                                SizedBox(
-                                  height: AppDimensions.chipHeight + 8.h,
-                                  child: ValueListenableBuilder<String>(
-                                    valueListenable: _selectedCategoryNotifier,
-                                    builder:
-                                        (context, selectedCategorySlug, _) {
-                                          return ListView.builder(
-                                            scrollDirection: Axis.horizontal,
-                                            itemCount:
-                                                feed.categorySections.length +
-                                                1,
-                                            itemBuilder: (context, index) {
-                                              // First chip is always "All"
-                                              if (index == 0) {
-                                                final isActive =
-                                                    selectedCategorySlug ==
-                                                    'all';
-                                                return Padding(
-                                                  padding: EdgeInsets.only(
-                                                    right: AppDimensions.s,
-                                                  ),
-                                                  child: AppChip.filter(
-                                                    label: 'All',
-                                                    isActive: isActive,
-                                                    activeColor: AppColors
-                                                        .primaryContainer,
-                                                    onTap: () {
-                                                      _selectedCategoryNotifier
-                                                              .value =
-                                                          'all';
-                                                    },
-                                                  ),
-                                                );
-                                              }
-
-                                              final category = feed
-                                                  .categorySections[index - 1]
-                                                  .category;
-                                              final isActive =
-                                                  selectedCategorySlug ==
-                                                  category.slug;
-                                              return Padding(
-                                                padding: EdgeInsets.only(
-                                                  right: AppDimensions.s,
-                                                ),
-                                                child: AppChip.filter(
-                                                  label: category.name,
-                                                  isActive: isActive,
-                                                  activeColor: AppColors
-                                                      .primaryContainer,
-                                                  onTap: () {
-                                                    _selectedCategoryNotifier
-                                                            .value =
-                                                        category.slug;
-                                                  },
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                  ),
-                                ),
-                                SizedBox(height: AppDimensions.lg),
-                              ],
-
-                              // ── Selected Category / All Grid ───────
-                              ValueListenableBuilder<String>(
-                                valueListenable: _selectedCategoryNotifier,
-                                builder: (context, selectedCategorySlug, _) {
-                                  return _SelectedSectionView(
-                                    feed: feed,
-                                    selectedCategorySlug: selectedCategorySlug,
-                                    onWallpaperTap: _onWallpaperTap,
+                      // ── Editor's Choice ────────────────────────
+                      if (feed.editorsChoice.isNotEmpty) ...[
+                        _SectionHeader(title: 'Editor\'s Choice'),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDimensions.md,
+                            ),
+                            child: SizedBox(
+                              height: 300.h,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: feed.editorsChoice.length,
+                                itemBuilder: (context, index) {
+                                  final wallpaper =
+                                      feed.editorsChoice[index];
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      right: AppDimensions.md,
+                                    ),
+                                    child: SizedBox(
+                                      width: 220.w,
+                                      child: WallpaperCard(
+                                        imageUrl: wallpaper.cardImageUrl,
+                                        title: wallpaper.title.isEmpty
+                                            ? null
+                                            : wallpaper.title,
+                                        resolution: wallpaper.resolution,
+                                        isPremium: wallpaper.isPremium,
+                                        onTap: () =>
+                                            _onWallpaperTap(wallpaper),
+                                      ),
+                                    ),
                                   );
                                 },
                               ),
-
-                              SizedBox(height: AppDimensions.xl),
-                            ],
+                            ),
                           ),
                         ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(height: AppDimensions.lg),
+                        ),
+                      ],
+
+                      // ── Category Filters ───────────────────────
+                      if (feed.categorySections.isNotEmpty) ...[
+                        _SectionHeader(title: 'Categories'),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDimensions.md,
+                            ),
+                            child: SizedBox(
+                              height: AppDimensions.chipHeight + 8.h,
+                              child: ValueListenableBuilder<String>(
+                                valueListenable: _selectedCategoryNotifier,
+                                builder:
+                                    (context, selectedCategorySlug, _) {
+                                      return ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount:
+                                            feed.categorySections.length + 1,
+                                        itemBuilder: (context, index) {
+                                          // First chip is always "All"
+                                          if (index == 0) {
+                                            final isActive =
+                                                selectedCategorySlug ==
+                                                    'all';
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                right: AppDimensions.s,
+                                              ),
+                                              child: AppChip.filter(
+                                                label: 'All',
+                                                isActive: isActive,
+                                                activeColor: AppColors
+                                                    .primaryContainer,
+                                                onTap: () {
+                                                  _selectedCategoryNotifier
+                                                          .value =
+                                                      'all';
+                                                },
+                                              ),
+                                            );
+                                          }
+
+                                          final category = feed
+                                              .categorySections[index - 1]
+                                              .category;
+                                          final isActive =
+                                              selectedCategorySlug ==
+                                                  category.slug;
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              right: AppDimensions.s,
+                                            ),
+                                            child: AppChip.filter(
+                                              label: category.name,
+                                              isActive: isActive,
+                                              activeColor: AppColors
+                                                  .primaryContainer,
+                                              onTap: () {
+                                                _selectedCategoryNotifier
+                                                        .value =
+                                                    category.slug;
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                              ),
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(height: AppDimensions.lg),
+                        ),
+                      ],
+
+                      // ── Selected Category / All Grid ───────────
+                      // Note: this builder returns SLIVERS (grouped with
+                      // SliverMainAxisGroup), so the wallpaper grid stays a
+                      // true virtualised SliverGrid — only visible cards are
+                      // built and only those images are loaded.
+                      ValueListenableBuilder<String>(
+                        valueListenable: _selectedCategoryNotifier,
+                        builder: (context, selectedCategorySlug, _) {
+                          return _SelectedSectionSlivers(
+                            feed: feed,
+                            selectedCategorySlug: selectedCategorySlug,
+                            onWallpaperTap: _onWallpaperTap,
+                          );
+                        },
+                      ),
+
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: AppDimensions.xl),
                       ),
                     ],
                   ),
@@ -230,14 +237,36 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─── Selected Section (All wallpapers OR a single category's) ──────────────
+// ─── Section header (same visual as before, now a reusable sliver) ──────────
 
-class _SelectedSectionView extends StatelessWidget {
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
+        child: Text(
+          title,
+          style: AppTextStyles.headlineMd.copyWith(color: AppColors.onSurface),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Selected Section (All wallpapers OR a single category's) ──────────────
+// Returns slivers so the grid below is fully lazy (viewport-virtualised).
+
+class _SelectedSectionSlivers extends StatelessWidget {
   final HomeFeedEntity feed;
   final String selectedCategorySlug;
   final void Function(WallpaperEntity wallpaper) onWallpaperTap;
 
-  const _SelectedSectionView({
+  const _SelectedSectionSlivers({
     required this.feed,
     required this.selectedCategorySlug,
     required this.onWallpaperTap,
@@ -281,37 +310,48 @@ class _SelectedSectionView extends StatelessWidget {
       wallpapers = section.wallpapers;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.headlineMd.copyWith(color: AppColors.onSurface),
-        ),
-        SizedBox(height: AppDimensions.md),
-        if (wallpapers.isEmpty)
-          _ComingSoonSection(section: section)
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: AppDimensions.gridColumnCount,
-              crossAxisSpacing: AppDimensions.md,
-              mainAxisSpacing: AppDimensions.md,
-              childAspectRatio: 0.65,
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
+            child: Text(
+              title,
+              style: AppTextStyles.headlineMd.copyWith(
+                color: AppColors.onSurface,
+              ),
             ),
-            itemCount: wallpapers.length,
-            itemBuilder: (context, index) {
-              final wallpaper = wallpapers[index];
-              return WallpaperCard(
-                imageUrl: wallpaper.cardImageUrl,
-                title: wallpaper.title.isEmpty ? null : wallpaper.title,
-                resolution: wallpaper.resolution,
-                isPremium: wallpaper.isPremium,
-                onTap: () => onWallpaperTap(wallpaper),
-              );
-            },
+          ),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: AppDimensions.md)),
+        if (wallpapers.isEmpty)
+          // ── Coming Soon (no wallpapers in this category) ──
+          SliverToBoxAdapter(child: _ComingSoonSection(section: section))
+        else
+          // ── Lazy wallpaper grid ──────────────────────────────
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: AppDimensions.md),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: AppDimensions.gridColumnCount,
+                crossAxisSpacing: AppDimensions.md,
+                mainAxisSpacing: AppDimensions.md,
+                childAspectRatio: 0.65,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final wallpaper = wallpapers[index];
+                  return WallpaperCard(
+                    imageUrl: wallpaper.cardImageUrl,
+                    title: wallpaper.title.isEmpty ? null : wallpaper.title,
+                    resolution: wallpaper.resolution,
+                    isPremium: wallpaper.isPremium,
+                    onTap: () => onWallpaperTap(wallpaper),
+                  );
+                },
+                childCount: wallpapers.length,
+              ),
+            ),
           ),
       ],
     );

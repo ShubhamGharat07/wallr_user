@@ -318,7 +318,7 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
-      'emits [AuthFailureState] when sign out fails',
+      'still emits [SignOutSuccess] (local session cleared) when remote sign out fails',
       setUp: () {
         when(() => mockSignOut(const NoParams())).thenAnswer(
           (_) async => const Left(AuthFailure('Failed to sign out')),
@@ -326,7 +326,14 @@ void main() {
       },
       build: () => authBloc,
       act: (bloc) => bloc.add(const SignOutRequested()),
-      expect: () => [const AuthFailureState('Failed to sign out')],
+      // Local-first sign out: user must ALWAYS be able to log out, even if
+      // the Firebase/Google remote call fails.
+      expect: () => [const SignOutSuccess()],
+      verify: (_) {
+        verify(() => mockPrefs.remove('session_token')).called(1);
+        verify(() => mockPrefs.remove('user_email')).called(1);
+        verify(() => mockPrefs.remove('login_time')).called(1);
+      },
     );
   });
 

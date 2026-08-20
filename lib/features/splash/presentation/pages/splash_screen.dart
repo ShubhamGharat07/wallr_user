@@ -25,7 +25,30 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _setupAnimation();
     _checkAuthStatus();
+    // Pre-decode the login screen's heavy assets during idle time — the day
+    // the user signs out and lands on login, the images are already cached
+    // and navigation has zero frame drops.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _precacheAuthAssets());
   }
+
+  /// Pre-decodes the Auth screen's full-screen background + logo so the
+  /// splash-to-login / sign-out-to-login navigation stays at 0 jank.
+  Future<void> _precacheAuthAssets() async {
+    if (!mounted) return;
+    await precacheImage(
+      const AssetImage('assets/Loginbackground.png'),
+      context,
+      onError: _ignoreCacheError,
+    );
+    if (!mounted) return;
+    await precacheImage(
+      const AssetImage('assets/applogo.png'),
+      context,
+      onError: _ignoreCacheError,
+    );
+  }
+
+  static void _ignoreCacheError(Object error, StackTrace? stackTrace) {}
 
   void _setupAnimation() {
     _animationController = AnimationController(
@@ -53,14 +76,13 @@ class _SplashScreenState extends State<SplashScreen>
     final sessionToken = prefs.getString('session_token');
     final userEmail = prefs.getString('user_email');
 
-    // Agar session exist kare toh AuthBloc ko check kar de
     if (sessionToken != null && sessionToken.isNotEmpty && userEmail != null) {
       if (!mounted) return;
-      // Session exist karta hai - directly home par jao
+      // A session exists — go straight to home.
       context.go(RouteNames.home);
     } else {
       if (!mounted) return;
-      // Session nahi hai - onboarding par jao
+      // No session — go to onboarding.
       context.go(RouteNames.onboarding);
     }
   }
@@ -106,40 +128,6 @@ class _SplashScreenState extends State<SplashScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: 30.h),
-
-                    // App Logo
-                    Container(
-                      width: 80.w,
-                      height: 80.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFFF5C518),
-                            const Color(0xFFFAD94E),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFF5C518,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: CustomPaint(
-                          size: Size(40.w, 40.w),
-                          painter: _DiamondLogoPainter(),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 24.h),
 
                     // App Name
                     Text(
@@ -220,42 +208,4 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-}
-
-// ─── Diamond Logo Painter ─────────────────────────────────────────────────
-
-class _DiamondLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-
-    final strokePaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    // Outer diamond
-    final path = Path()
-      ..moveTo(size.width / 2, 0)
-      ..lineTo(size.width, size.height * 0.38)
-      ..lineTo(size.width / 2, size.height)
-      ..lineTo(0, size.height * 0.38)
-      ..close();
-
-    canvas.drawPath(path, paint);
-    canvas.drawPath(path, strokePaint);
-
-    // Inner detail
-    final innerPath = Path()
-      ..moveTo(size.width * 0.25, size.height * 0.38)
-      ..lineTo(size.width / 2, size.height * 0.6)
-      ..lineTo(size.width * 0.75, size.height * 0.38);
-
-    canvas.drawPath(innerPath, strokePaint..strokeWidth = 1.0);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
 }

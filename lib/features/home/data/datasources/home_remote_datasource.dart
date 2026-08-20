@@ -37,6 +37,9 @@ abstract interface class HomeRemoteDataSource {
 
   /// Trending wallpapers — highest view count first.
   Future<List<WallpaperModel>> getTrending({int limit});
+
+  /// Single wallpaper by id — used by deep links ("open shared wallpaper").
+  Future<WallpaperModel> getWallpaperById(String wallpaperId);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -131,6 +134,19 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       throw ServerException(
         message: e.message ?? 'Failed to load trending wallpapers.',
       );
+    }
+  }
+
+  @override
+  Future<WallpaperModel> getWallpaperById(String wallpaperId) async {
+    try {
+      final doc = await _wallpapersRef.doc(wallpaperId).get(_getOptions);
+      if (!doc.exists) {
+        throw ServerException(message: 'Wallpaper not found.');
+      }
+      return WallpaperModel.fromSnapshot(doc);
+    } on FirebaseException catch (e) {
+      throw ServerException(message: e.message ?? 'Failed to load wallpaper.');
     }
   }
 }

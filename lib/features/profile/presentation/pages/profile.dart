@@ -8,6 +8,10 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/constants/text_styles.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../wallpaper_download/presentation/bloc/downloads_bloc.dart';
 import '../../../wallpaper_download/presentation/bloc/downloads_event.dart';
 import '../../../wallpaper_download/presentation/bloc/downloads_state.dart';
@@ -18,6 +22,114 @@ import '../../../wallpaper_favourite/presentation/bloc/favorites_state.dart';
 class Profile extends StatelessWidget {
   const Profile({super.key});
 
+  /// Production sign-out flow: confirmation dialog first, then the real
+  /// sign-out only fires when the user explicitly confirms.
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.containerRadius),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppDimensions.lg,
+            vertical: AppDimensions.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                size: 40.w,
+                color: AppColors.error,
+              ),
+              SizedBox(height: AppDimensions.md),
+              Text(
+                'Sign Out',
+                style: AppTextStyles.headlineMd.copyWith(
+                  color: AppColors.onSurface,
+                ),
+              ),
+              SizedBox(height: AppDimensions.sm),
+              Text(
+                'Are you sure you want to sign out of your account?',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: AppDimensions.lg),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton.secondary(
+                      label: 'Cancel',
+                      onTap: () => Navigator.pop(dialogContext, false),
+                      isFullWidth: true,
+                    ),
+                  ),
+                  SizedBox(width: AppDimensions.md),
+                  Expanded(
+                    child: SizedBox(
+                      height: AppDimensions.buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: StadiumBorder(),
+                        ),
+                        child: Text(
+                          'Sign Out',
+                          style: AppTextStyles.labelLg.copyWith(
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      // ── 0-jank ticket ──
+      // Pre-warm the login screen's 2 assets while sign-out runs. The
+      // splash-time precache can't be trusted — the home screen's dozens
+      // of wallpaper images fill the shared ImageCache and may EVICT the
+      // login background. So re-warm the decode right before navigating,
+      // and when AuthScreen opens the image is already ready with zero
+      // frame drops on the transition.
+      _prewarmAuthAssets(context);
+      context.read<AuthBloc>().add(const SignOutRequested());
+    }
+  }
+
+  /// Fire-and-forget — decode background + logo NOW while sign-out runs,
+  /// so navigation has zero decode work left.
+  void _prewarmAuthAssets(BuildContext context) {
+    for (final asset in const [
+      'assets/Loginbackground.png',
+      'assets/applogo.png',
+    ]) {
+      precacheImage(
+        AssetImage(asset),
+        context,
+        onError: _ignoreCacheError,
+      );
+    }
+  }
+
+  static void _ignoreCacheError(Object error, StackTrace? stackTrace) {}
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -27,6 +139,9 @@ class Profile extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => sl<FavoritesBloc>()..add(const FavoritesRequested()),
+        ),
+        BlocProvider(
+          create: (_) => sl<AuthBloc>(),
         ),
       ],
       child: Scaffold(
@@ -200,11 +315,39 @@ class Profile extends StatelessWidget {
                       // Sign Out Card
                       _OptionsCard(
                         children: [
-                          _OptionItem(
-                            icon: Icons.logout_rounded,
-                            title: 'Sign Out',
-                            isDestructive: true,
-                            onTap: () {},
+                          BlocConsumer<AuthBloc, AuthState>(
+                            listener: (context, state) {
+                              if (state is SignOutSuccess) {
+                                // Session cleared — go straight to the login page.
+                                context.go(RouteNames.auth);
+                              } else if (state is AuthFailureState) {
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppColors.error,
+                                      content: Text(
+                                        'Couldn\'t sign out. Please try again.',
+                                        style: AppTextStyles.bodyMd.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                              }
+                            },
+                            builder: (context, state) {
+                              final isSigningOut = state is AuthLoading;
+                              return _OptionItem(
+                                icon: Icons.logout_rounded,
+                                title: 'Sign Out',
+                                isDestructive: true,
+                                showLoading: isSigningOut,
+                                onTap: isSigningOut
+                                    ? () {}
+                                    : () => _confirmSignOut(context),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -252,6 +395,7 @@ class _OptionItem extends StatelessWidget {
   final String title;
   final String? trailing;
   final bool isDestructive;
+  final bool showLoading;
   final VoidCallback onTap;
 
   const _OptionItem({
@@ -259,6 +403,7 @@ class _OptionItem extends StatelessWidget {
     required this.title,
     this.trailing,
     this.isDestructive = false,
+    this.showLoading = false,
     required this.onTap,
   });
 
@@ -287,7 +432,16 @@ class _OptionItem extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) ...[
+            if (showLoading)
+              SizedBox(
+                width: 18.w,
+                height: 18.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.error,
+                ),
+              )
+            else if (trailing != null) ...[
               Text(
                 trailing!,
                 style: AppTextStyles.bodyMd.copyWith(
@@ -296,11 +450,12 @@ class _OptionItem extends StatelessWidget {
               ),
               SizedBox(width: AppDimensions.md),
             ],
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16.w,
-              color: AppColors.onSurfaceVariant,
-            ),
+            if (!showLoading)
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16.w,
+                color: AppColors.onSurfaceVariant,
+              ),
           ],
         ),
       ),

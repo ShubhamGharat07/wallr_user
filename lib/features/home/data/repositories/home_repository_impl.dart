@@ -6,6 +6,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/home_feed_entity.dart';
+import '../../domain/entities/wallpaper_entity.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_datasource.dart';
 import '../models/category_model.dart';
@@ -84,6 +85,24 @@ class HomeRepositoryImpl implements HomeRepository {
           categorySections: sections,
         ),
       );
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (_) {
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, WallpaperEntity>> getWallpaperById(
+    String wallpaperId,
+  ) async {
+    if (!await _networkInfo.isConnected) {
+      return const Left(NetworkFailure());
+    }
+
+    try {
+      final wallpaper = await _remote.getWallpaperById(wallpaperId);
+      return Right(wallpaper);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (_) {

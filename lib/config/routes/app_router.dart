@@ -117,12 +117,27 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: RouteNames.auth,
-      builder: (context, state) {
+      // Custom fade transition — avoids an abrupt frame-splice on route
+      // swap; the next page fades in smoothly (0 jank on sign-out).
+      pageBuilder: (context, state) {
         final selectedTab =
             state.uri.queryParameters['tab']?.toLowerCase() ?? 'signin';
-        return BlocProvider<AuthBloc>(
-          create: (_) => sl<AuthBloc>(),
-          child: AuthScreen(initialTabIndex: selectedTab == 'signup' ? 1 : 0),
+        return CustomTransitionPage(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 240),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+          child: BlocProvider<AuthBloc>(
+            create: (_) => sl<AuthBloc>(),
+            child:
+                AuthScreen(initialTabIndex: selectedTab == 'signup' ? 1 : 0),
+          ),
         );
       },
     ),

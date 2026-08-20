@@ -826,6 +826,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/routes/route_names.dart';
@@ -1075,24 +1076,16 @@ class _SocialButtonsRow extends StatelessWidget {
             Expanded(
               child: _SocialButton(
                 label: AppStrings.authGoogleSignIn,
-                icon: const Icon(
-                  Icons.account_circle_outlined,
+                icon: const FaIcon(
+                  FontAwesomeIcons.google,
                   color: Colors.white,
-                  size: 20,
+                  size: 18,
                 ),
                 onTap: isLoading
                     ? null
                     : () => context.read<AuthBloc>().add(
                         const SignInWithGoogleRequested(),
                       ),
-              ),
-            ),
-            SizedBox(width: AppDimensions.sm),
-            Expanded(
-              child: _SocialButton(
-                label: AppStrings.authAppleSignIn,
-                icon: const Icon(Icons.apple, color: Colors.white, size: 22),
-                onTap: null,
               ),
             ),
           ],

@@ -30,7 +30,7 @@ class NetworkInfoImpl implements NetworkInfo {
   Stream<bool> get onConnectivityChanged => _connectivity.onConnectivityChanged
       .map((results) => _hasConnection(results));
 
-  // ConnectivityResult list me se ek bhi non-none ho to connected.
+  // Connected if any result is not ConnectivityResult.none.
   bool _hasConnection(List<ConnectivityResult> results) =>
       results.any((r) => r != ConnectivityResult.none);
 }

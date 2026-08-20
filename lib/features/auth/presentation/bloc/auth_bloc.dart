@@ -49,14 +49,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _signInWithEmail(
       SignInWithEmailParams(email: event.email, password: event.password),
     );
-    result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (user) async {
-        // ✅ Session save kar
-        await _saveSession(user.email);
-        emit(AuthSuccess(user));
-      },
+    // IMPORTANT: always emit() before the handler completes. Emitting from
+    // inside the async fold callback after `await _saveSession` meant the
+    // handler had already finished, which tripped the debug
+    // 'emit was called after an event handler completed' assertion: the
+    // spinner stuck forever and navigation never fired.
+    final failureMessage = result.fold<String?>(
+      (failure) => failure.message,
+      (_) => null,
     );
+    if (failureMessage != null) {
+      emit(AuthFailureState(failureMessage));
+      return;
+    }
+    final user = result.getOrElse(() => throw StateError('Unreachable'));
+    await _saveSession(user.email);
+    emit(AuthSuccess(user));
   }
 
   Future<void> _onSignUpWithEmail(
@@ -71,14 +79,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       ),
     );
-    result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (user) async {
-        // ✅ Session save kar
-        await _saveSession(user.email);
-        emit(AuthSuccess(user));
-      },
+    final failureMessage = result.fold<String?>(
+      (failure) => failure.message,
+      (_) => null,
     );
+    if (failureMessage != null) {
+      emit(AuthFailureState(failureMessage));
+      return;
+    }
+    final user = result.getOrElse(() => throw StateError('Unreachable'));
+    await _saveSession(user.email);
+    emit(AuthSuccess(user));
   }
 
   Future<void> _onSignInWithGoogle(
@@ -87,14 +98,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     final result = await _signInWithGoogle(const NoParams());
-    result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (user) async {
-        // ✅ Session save kar
-        await _saveSession(user.email);
-        emit(AuthSuccess(user));
-      },
+    final failureMessage = result.fold<String?>(
+      (failure) => failure.message,
+      (_) => null,
     );
+    if (failureMessage != null) {
+      emit(AuthFailureState(failureMessage));
+      return;
+    }
+    final user = result.getOrElse(() => throw StateError('Unreachable'));
+    await _saveSession(user.email);
+    emit(AuthSuccess(user));
   }
 
   Future<void> _onForgotPassword(
@@ -113,21 +127,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final result = await _signOut(const NoParams());
-    result.fold(
-      (failure) => emit(AuthFailureState(failure.message)),
-      (_) async {
-        // ✅ Session clear kar
-        await _clearSession();
-        emit(const SignOutSuccess());
-      },
-    );
+    // Try the Firebase/Google remote sign-out. Even if it fails for any
+    // reason (network, GoogleSignIn config, etc.), the local session is
+    // ALWAYS cleared — the user must always be able to log out.
+    await _signOut(const NoParams());
+    await _clearSession();
+    emit(const SignOutSuccess());
   }
 
-  /// 💾 Session save kar - jab user successful login karega
+  /// Save the session when the user successfully logs in.
   Future<void> _saveSession(String userEmail) async {
     try {
-      // Generate unique session token (in production, Firebase auth token use kar)
+      // Generate a unique session token (use the Firebase auth token in production)
       final sessionToken = 'session_${DateTime.now().millisecondsSinceEpoch}';
 
       await Future.wait([
@@ -141,7 +152,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// 🧹 Session clear kar - jab user logout karega
+  /// Clear the session when the user logs out.
   Future<void> _clearSession() async {
     try {
       await Future.wait([

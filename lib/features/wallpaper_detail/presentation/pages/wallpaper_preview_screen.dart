@@ -662,6 +662,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/di/injection_container.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/services/share_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../home/domain/entities/wallpaper_entity.dart';
 import '../cubit/wallpaper_actions_cubit.dart';
@@ -983,6 +984,11 @@ class _PreviewViewState extends State<_PreviewView> {
     );
   }
 
+  Future<void> _onShare() async {
+    if (!mounted) return;
+    await sl<ShareService>().shareWallpaper(widget.wallpaper);
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
@@ -1064,6 +1070,7 @@ class _PreviewViewState extends State<_PreviewView> {
                                 setState(() => _selectedTarget = t),
                             onFavourite: () =>
                                 setState(() => _isFavourited = !_isFavourited),
+                            onShare: _onShare,
                           ),
                         ),
 
@@ -1105,6 +1112,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onBack;
   final ValueChanged<WallpaperTarget> onTargetChanged;
   final VoidCallback onFavourite;
+  final VoidCallback onShare;
 
   const _TopBar({
     required this.topPad,
@@ -1113,6 +1121,7 @@ class _TopBar extends StatelessWidget {
     required this.onBack,
     required this.onTargetChanged,
     required this.onFavourite,
+    required this.onShare,
   });
 
   @override
@@ -1137,6 +1146,11 @@ class _TopBar extends StatelessWidget {
           const Spacer(),
           _TargetToggle(selected: selectedTarget, onChanged: onTargetChanged),
           const Spacer(),
+          _GlassIconButton(
+            icon: Icons.share_outlined,
+            onTap: onShare,
+          ),
+          SizedBox(width: 12.w),
           _GlassIconButton(
             icon: isFavourited
                 ? Icons.favorite_rounded
