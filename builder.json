@@ -1,0 +1,19 @@
+{
+  "project": "wallr",
+  "platform": "ios",
+  "github": {
+    "owner": "ShubhamGharat07",
+    "repo": "wallr_user"
+  },
+  "provider": "github",
+  "codemagic": {},
+  "bitrise": {},
+  "ios": {},
+  "flutter": {
+    "version": "3.38.2",
+    "watch": {}
+  },
+  "reactNative": {},
+  "kmp": {},
+  "mobai": {}
+}
