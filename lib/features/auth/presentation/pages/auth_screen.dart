@@ -482,7 +482,7 @@
 //           child: Column(
 //             crossAxisAlignment: CrossAxisAlignment.end,
 //             children: [
-//               _AuthTextField(
+//               AuthTextField(
 //                 controller: _emailCtrl,
 //                 hint: AppStrings.authEmailHint,
 //                 prefixIcon: Icons.mail_outline,
@@ -492,7 +492,7 @@
 
 //               SizedBox(height: AppDimensions.sm),
 
-//               _AuthTextField(
+//               AuthTextField(
 //                 controller: _passwordCtrl,
 //                 hint: AppStrings.authPasswordHint,
 //                 prefixIcon: Icons.lock_outline,
@@ -635,7 +635,7 @@
 //           key: _formKey,
 //           child: Column(
 //             children: [
-//               _AuthTextField(
+//               AuthTextField(
 //                 controller: _nameCtrl,
 //                 hint: AppStrings.authNameHint,
 //                 prefixIcon: Icons.person_outline,
@@ -644,7 +644,7 @@
 
 //               SizedBox(height: AppDimensions.sm),
 
-//               _AuthTextField(
+//               AuthTextField(
 //                 controller: _emailCtrl,
 //                 hint: AppStrings.authEmailHint,
 //                 prefixIcon: Icons.mail_outline,
@@ -654,7 +654,7 @@
 
 //               SizedBox(height: AppDimensions.sm),
 
-//               _AuthTextField(
+//               AuthTextField(
 //                 controller: _passwordCtrl,
 //                 hint: AppStrings.authPasswordHint,
 //                 prefixIcon: Icons.lock_outline,
@@ -748,7 +748,7 @@
 //   final String? Function(String?)? validator;
 //   final Widget? suffixIcon;
 
-//   const _AuthTextField({
+//   const AuthTextField({
 //     required this.controller,
 //     required this.hint,
 //     required this.prefixIcon,
@@ -838,6 +838,8 @@ import '../../../../core/utils/validators.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/auth_text_field.dart';
 
 class AuthScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -899,7 +901,7 @@ class _AuthScreenState extends State<AuthScreen>
         body: Stack(
           fit: StackFit.expand,
           children: [
-            const _BackgroundCollage(),
+            const AuthBackground(),
             DraggableScrollableSheet(
               initialChildSize: 0.62,
               minChildSize: 0.62,
@@ -911,34 +913,6 @@ class _AuthScreenState extends State<AuthScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Background Collage ───────────────────────────────────────────────────────
-
-class _BackgroundCollage extends StatelessWidget {
-  const _BackgroundCollage();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset('assets/Loginbackground.png', fit: BoxFit.cover),
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x77000000), Color(0xDD000000)],
-              ),
-            ),
-          ),
-          Container(color: Colors.black.withOpacity(0.35)),
-        ],
       ),
     );
   }
@@ -1203,15 +1177,9 @@ class _SignInFormState extends State<_SignInForm> {
   }
 
   void _onForgotPassword() {
-    if (_emailCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enter your email first')));
-      return;
-    }
-    context.read<AuthBloc>().add(
-      ForgotPasswordRequested(_emailCtrl.text.trim()),
-    );
+    final email = _emailCtrl.text.trim();
+    final query = email.isEmpty ? '' : '?email=${Uri.encodeQueryComponent(email)}';
+    context.push('${RouteNames.forgotPassword}$query');
   }
 
   @override
@@ -1224,7 +1192,7 @@ class _SignInFormState extends State<_SignInForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _AuthTextField(
+              AuthTextField(
                 controller: _emailCtrl,
                 hint: AppStrings.authEmailHint,
                 prefixIcon: Icons.mail_outline,
@@ -1234,7 +1202,7 @@ class _SignInFormState extends State<_SignInForm> {
 
               SizedBox(height: AppDimensions.sm),
 
-              _AuthTextField(
+              AuthTextField(
                 controller: _passwordCtrl,
                 hint: AppStrings.authPasswordHint,
                 prefixIcon: Icons.lock_outline,
@@ -1377,7 +1345,7 @@ class _SignUpFormState extends State<_SignUpForm> {
           key: _formKey,
           child: Column(
             children: [
-              _AuthTextField(
+              AuthTextField(
                 controller: _nameCtrl,
                 hint: AppStrings.authNameHint,
                 prefixIcon: Icons.person_outline,
@@ -1386,7 +1354,7 @@ class _SignUpFormState extends State<_SignUpForm> {
 
               SizedBox(height: AppDimensions.sm),
 
-              _AuthTextField(
+              AuthTextField(
                 controller: _emailCtrl,
                 hint: AppStrings.authEmailHint,
                 prefixIcon: Icons.mail_outline,
@@ -1396,7 +1364,7 @@ class _SignUpFormState extends State<_SignUpForm> {
 
               SizedBox(height: AppDimensions.sm),
 
-              _AuthTextField(
+              AuthTextField(
                 controller: _passwordCtrl,
                 hint: AppStrings.authPasswordHint,
                 prefixIcon: Icons.lock_outline,
@@ -1480,87 +1448,5 @@ class _SignUpFormState extends State<_SignUpForm> {
 }
 
 // ─── Shared Auth TextField ────────────────────────────────────────────────────
-
-class _AuthTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final IconData prefixIcon;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final String? Function(String?)? validator;
-  final Widget? suffixIcon;
-
-  const _AuthTextField({
-    required this.controller,
-    required this.hint,
-    required this.prefixIcon,
-    this.obscureText = false,
-    this.keyboardType,
-    this.validator,
-    this.suffixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: AppTextStyles.bodyMd,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.navInactive),
-        prefixIcon: Icon(
-          prefixIcon,
-          color: AppColors.navInactive,
-          size: AppDimensions.iconSm,
-        ),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: AppColors.inputSurface,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: AppDimensions.md,
-          vertical: AppDimensions.sm,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          borderSide: BorderSide(
-            color: AppColors.cardBorder,
-            width: AppDimensions.borderThin,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          borderSide: BorderSide(
-            color: AppColors.cardBorder,
-            width: AppDimensions.borderThin,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          borderSide: BorderSide(
-            color: AppColors.primaryContainer,
-            width: AppDimensions.borderMedium,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          borderSide: BorderSide(
-            color: AppColors.error,
-            width: AppDimensions.borderThin,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.chipRadius),
-          borderSide: BorderSide(
-            color: AppColors.error,
-            width: AppDimensions.borderMedium,
-          ),
-        ),
-        errorStyle: AppTextStyles.labelSm.copyWith(color: AppColors.error),
-      ),
-    );
-  }
-}
+// Moved to widgets/auth_text_field.dart — used by Sign In, Sign Up and
+// Forgot Password so all three screens share one field visual language.

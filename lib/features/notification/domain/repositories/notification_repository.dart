@@ -8,5 +8,6 @@ abstract interface class NotificationRepository {
   Future<Either<Failure, void>> markAsRead(String notificationId);
   Future<Either<Failure, void>> deleteNotification(String notificationId);
   Future<Either<Failure, void>> clearAllNotifications();
+  Future<Either<Failure, void>> saveFcmToken(String token);
   Stream<int> unreadCountStream();
 }

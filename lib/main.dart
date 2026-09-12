@@ -18,8 +18,8 @@ import 'core/theme/app_theme.dart';
 import 'features/home/domain/usecases/get_wallpaper_by_id_usecase.dart';
 import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
 import 'features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
+import 'features/notification/domain/usecases/save_fcm_token_usecase.dart';
 import 'features/onboarding/presentation/bloc/onboarding_cubit.dart';
-
 final fcmService = FcmService();
 
 Future<void> main() async {
@@ -39,7 +39,15 @@ Future<void> main() async {
 
   await initDependencies();
 
-  await fcmService.initialize();
+  await fcmService.initialize(
+    persistToken: (token) async {
+      // Push tokens are stored per-user so the backend can deliver FCM
+      // messages to this device — without this, notifications only ever show
+      // in-app while the app is open.
+      final result = await sl<SaveFcmTokenUseCase>()(token);
+      result.fold((_) {}, (_) {});
+    },
+  );
 
   // Deep links must be registered before the first frame can carry a
   // cold-start link — the initial link is cached and consumed by MyApp.

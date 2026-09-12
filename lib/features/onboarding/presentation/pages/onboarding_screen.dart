@@ -16,11 +16,13 @@ class _Slide {
   final String title;
   final String subtitle;
   final List<Color> bgColors;
+  final String image;
 
   const _Slide({
     required this.title,
     required this.subtitle,
     required this.bgColors,
+    required this.image,
   });
 }
 
@@ -30,18 +32,21 @@ const _kSlides = [
     subtitle:
         'Transform your screen into a cinematic gallery with our curated collection of high-fidelity photography and digital art.',
     bgColors: [Color(0xFF0B1F1C), Color(0xFF050F0A)],
+    image: 'assets/G1.jpg',
   ),
   _Slide(
     title: 'Curate your\nCollection',
     subtitle:
         'Save your favourites and organise them into beautiful personal collections.',
     bgColors: [Color(0xFF0B1520), Color(0xFF050A12)],
+    image: 'assets/G2.jpg',
   ),
   _Slide(
     title: 'Set in\nOne Tap',
     subtitle:
         'Crop, preview, and set your wallpaper — home screen, lock screen, or both.',
     bgColors: [Color(0xFF1A110A), Color(0xFF0C0805)],
+    image: 'assets/G3.jpg',
   ),
 ];
 
@@ -57,10 +62,31 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   late final PageController _pageController;
 
+  // Backgrounds are ~3072x5504 source PNGs/JPGs. Decoding them at full
+  // resolution on the UI thread (or holding 3 full-size frames in memory)
+  // is the #1 source of navigation jank. Resize-on-decode to ~screen width
+  // instead — visually identical on a phone, ~5x cheaper.
+  static const int _bgDecodeWidth = 1200;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    // Pre-decode all slide backgrounds (resized) so page swipes never
+    // trigger a decode on the UI thread (0 jank). Must use the SAME
+    // resize params as the displayed image so the cache entry is reused.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final slide in _kSlides) {
+        precacheImage(
+          ResizeImage.resizeIfNeeded(
+            _bgDecodeWidth,
+            null,
+            AssetImage(slide.image),
+          ),
+          context,
+        );
+      }
+    });
   }
 
   @override
@@ -93,7 +119,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           body: Stack(
             fit: StackFit.expand,
             children: [
-              // ── 1. Animated gradient background
+              // ── 1. Animated gradient background (brand base color)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeInOut,
@@ -106,7 +132,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
 
-              // ── 2. Diagonal decorative lines (like the design)
+              // ── 2. Background image per slide (cross-faded, 0 jank)
+              RepaintBoundary(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 600),
+                  switchInCurve: Curves.easeInOut,
+                  switchOutCurve: Curves.easeInOut,
+                  layoutBuilder:
+                      (currentChild, previousChildren) => Stack(
+                        fit: StackFit.expand,
+                        children: [...previousChildren, currentChild!],
+                      ),
+                  child: Image.asset(
+                    slide.image,
+                    key: ValueKey(slide.image),
+                    fit: BoxFit.cover,
+                    cacheWidth: _bgDecodeWidth,
+                    filterQuality: FilterQuality.low,
+                  ),
+                ),
+              ),
+
+              // ── 3. Diagonal decorative lines (like the design)
               const RepaintBoundary(
                 child: CustomPaint(painter: _LinesPainter()),
               ),

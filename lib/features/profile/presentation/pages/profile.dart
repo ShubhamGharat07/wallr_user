@@ -114,18 +114,19 @@ class Profile extends StatelessWidget {
   }
 
   /// Fire-and-forget — decode background + logo NOW while sign-out runs,
-  /// so navigation has zero decode work left.
+  /// so navigation has zero decode work left. The background is resized on
+  /// decode (same params as AuthScreen) so the cache entry is reused.
   void _prewarmAuthAssets(BuildContext context) {
-    for (final asset in const [
-      'assets/Loginbackground.png',
-      'assets/applogo.png',
-    ]) {
-      precacheImage(
-        AssetImage(asset),
-        context,
-        onError: _ignoreCacheError,
-      );
-    }
+    precacheImage(
+      ResizeImage.resizeIfNeeded(1200, null, const AssetImage('assets/Loginbackground.png')),
+      context,
+      onError: _ignoreCacheError,
+    );
+    precacheImage(
+      const AssetImage('assets/applogo.png'),
+      context,
+      onError: _ignoreCacheError,
+    );
   }
 
   static void _ignoreCacheError(Object error, StackTrace? stackTrace) {}

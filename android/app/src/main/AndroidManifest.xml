@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <!-- Android 13+ granular media permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Required to display notifications in the status bar (Android 13+).
+         Without this the system silently drops every notification. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="wallr"
         android:name="${applicationName}"
@@ -57,6 +60,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Channel FCM uses to post notifications while the app is in the
+             background / terminated. Must match FcmService.channelId. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="wallr_notifications" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

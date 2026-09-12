@@ -47,6 +47,16 @@ abstract final class AppStrings {
   static const String authGoogleSignIn = 'Google';
   static const String authAppleSignIn = 'Apple';
 
+  static const String authForgotTitle = 'Forgot password?';
+  static const String authForgotSubtitle =
+      "Enter your email and we'll send you a reset link.";
+  static const String authSendResetLink = 'Send Reset Link';
+  static const String authBackToSignIn = 'Back to Sign In';
+  static const String authResetSent = 'Reset link sent!';
+  static const String authResetCheckInbox = 'Check your inbox';
+  static const String authResetSpamHint =
+      'Not there? Check your Spam/Junk folder.';
+
   static const String authEmailEmpty = 'Email cannot be empty';
   static const String authEmailInvalid = 'Enter a valid email address';
   static const String authPasswordEmpty = 'Password cannot be empty';

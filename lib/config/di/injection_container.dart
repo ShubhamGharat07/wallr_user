@@ -143,6 +143,7 @@ import '../../features/notification/domain/usecases/clear_notifications_usecase.
 import '../../features/notification/domain/usecases/delete_notification_usecase.dart';
 import '../../features/notification/domain/usecases/get_notifications_usecase.dart';
 import '../../features/notification/domain/usecases/mark_notification_read_usecase.dart';
+import '../../features/notification/domain/usecases/save_fcm_token_usecase.dart';
 import '../../features/notification/presentation/bloc/notification_bloc.dart';
 
 final sl = GetIt.instance;
@@ -330,6 +331,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => MarkNotificationReadUseCase(sl<NotificationRepository>()));
   sl.registerLazySingleton(() => DeleteNotificationUseCase(sl<NotificationRepository>()));
   sl.registerLazySingleton(() => ClearNotificationsUseCase(sl<NotificationRepository>()));
+  sl.registerLazySingleton(() => SaveFcmTokenUseCase(sl<NotificationRepository>()));
 
   sl.registerFactory(
     () => NotificationBloc(

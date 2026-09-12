@@ -87,6 +87,18 @@ final class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
+  Future<Either<Failure, void>> saveFcmToken(String token) async {
+    if (_uid == null) return Left(UnauthenticatedFailure());
+
+    try {
+      await _remoteDataSource.saveFcmToken(_uid!, token);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Stream<int> unreadCountStream() {
     if (_uid == null) return const Stream.empty();
     return _remoteDataSource.watchNotifications().map(

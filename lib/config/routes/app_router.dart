@@ -72,6 +72,7 @@ import 'package:go_router/go_router.dart';
 import '../../config/di/injection_container.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/auth_screen.dart';
+import '../../features/auth/presentation/pages/forgot_password_screen.dart';
 import '../../features/bottom_nav/presentation/pages/bottom_nav_screen.dart';
 import '../../features/categories/presentation/pages/categories.dart';
 import '../../features/favourites/presentation/pages/favourites.dart';
@@ -128,15 +129,59 @@ final GoRouter appRouter = GoRouter(
           reverseTransitionDuration: const Duration(milliseconds: 240),
           transitionsBuilder:
               (context, animation, secondaryAnimation, child) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                  reverseCurve: Curves.easeInCubic,
+                );
                 return FadeTransition(
-                  opacity: animation,
-                  child: child,
+                  opacity: curved,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.06),
+                      end: Offset.zero,
+                    ).animate(curved),
+                    child: child,
+                  ),
                 );
               },
           child: BlocProvider<AuthBloc>(
             create: (_) => sl<AuthBloc>(),
             child:
                 AuthScreen(initialTabIndex: selectedTab == 'signup' ? 1 : 0),
+          ),
+        );
+      },
+    ),
+    GoRoute(
+      path: RouteNames.forgotPassword,
+      pageBuilder: (context, state) {
+        final email = state.uri.queryParameters['email'] ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 240),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                  reverseCurve: Curves.easeInCubic,
+                );
+                return FadeTransition(
+                  opacity: curved,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.06),
+                      end: Offset.zero,
+                    ).animate(curved),
+                    child: child,
+                  ),
+                );
+              },
+          child: BlocProvider<AuthBloc>(
+            create: (_) => sl<AuthBloc>(),
+            child: ForgotPasswordScreen(initialEmail: email),
           ),
         );
       },

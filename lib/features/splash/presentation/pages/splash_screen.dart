@@ -33,10 +33,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   /// Pre-decodes the Auth screen's full-screen background + logo so the
   /// splash-to-login / sign-out-to-login navigation stays at 0 jank.
+  /// Uses the same resize params as AuthScreen so the cache entry is reused.
   Future<void> _precacheAuthAssets() async {
     if (!mounted) return;
     await precacheImage(
-      const AssetImage('assets/Loginbackground.png'),
+      ResizeImage.resizeIfNeeded(1200, null, const AssetImage('assets/Loginbackground.png')),
       context,
       onError: _ignoreCacheError,
     );
@@ -100,8 +101,14 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Image
-          Image.asset('assets/Splashscreen.jpg', fit: BoxFit.cover),
+          // Background Image — resized on decode (3072x5504 source) so the
+          // splash never blocks the UI thread with a full-res decode.
+          Image.asset(
+            'assets/Splashscreen.jpg',
+            fit: BoxFit.cover,
+            cacheWidth: 1200,
+            filterQuality: FilterQuality.low,
+          ),
 
           // Dark overlay
           Container(
