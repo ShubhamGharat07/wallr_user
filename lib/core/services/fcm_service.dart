@@ -3,13 +3,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../firebase_options.dart';
+
 /// Runs on a separate isolate for messages arriving while the app is
 /// backgrounded or terminated. Messages carrying a notification payload are
 /// already posted to the status bar by the system — this handler exists so
 /// data-only payloads (title/body keys) aren't silently dropped.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   if (message.notification != null) return; // system displayed it
 

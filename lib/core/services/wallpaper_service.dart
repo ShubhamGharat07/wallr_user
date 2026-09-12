@@ -55,11 +55,21 @@ class WallpaperService {
 
   /// Downloads [imageUrl] (in an isolate) then sets it as the wallpaper on
   /// the chosen [target]. Returns `true` if the OS reported success.
+  /// On iOS this is not supported (async_wallpaper is Android-only) —
+  /// throws [UnsupportedError] so the cubit can show a user-friendly message
+  /// and fall back to saving to the photo library.
   Future<bool> setWallpaper({
     required String imageUrl,
     required String wallpaperId,
     required WallpaperTarget target,
   }) async {
+    if (Platform.isIOS) {
+      throw UnsupportedError(
+        'Setting wallpaper directly is not supported on iOS. '
+        'Please save the image to your photo library and set it from Settings.',
+      );
+    }
+
     final file = await downloadToCache(
       imageUrl: imageUrl,
       wallpaperId: wallpaperId,

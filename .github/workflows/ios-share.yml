@@ -127,6 +127,19 @@ jobs:
               fi
             done
 
+      - name: Materialize missing .env from template
+        run: |
+          set -e
+          if [ ! -f ".env" ] && [ -f ".env.template" ]; then
+            cp ".env.template" ".env"
+            echo "::warning::.env was missing (gitignored); copied .env.template. CI build uses placeholder Cloudinary keys."
+          fi
+          if [ ! -f ".env" ]; then
+            echo "::warning::No .env present and no .env.template found — build will use ImageUtils fallback."
+          else
+            echo ".env present: $(wc -l < .env) lines"
+          fi
+
       - name: Generate Xcode project (XcodeGen)
         env:
           IOS_PATH: ${{ inputs.ios_path }}

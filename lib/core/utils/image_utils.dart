@@ -11,8 +11,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 ///   ImageUtils.avatar(publicId)  // 200×200 circle crop for profile
 
 abstract final class ImageUtils {
-  /// Cloud name from .env — `CLOUDINARY_CLOUD_NAME`
-  static String get _cloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
+  /// Cloud name from .env — `CLOUDINARY_CLOUD_NAME`. Falls back to the
+  /// committed template value so iOS simulator builds without secrets still render.
+  static String get _cloudName =>
+      dotenv.env['CLOUDINARY_CLOUD_NAME']?.isNotEmpty == true
+          ? dotenv.env['CLOUDINARY_CLOUD_NAME']!
+          : 'dlslacb8y';
 
   static const String _base = 'https://res.cloudinary.com';
   static const String _upload = 'image/upload';
