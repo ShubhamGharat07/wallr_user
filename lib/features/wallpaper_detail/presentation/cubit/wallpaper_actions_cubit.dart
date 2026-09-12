@@ -81,6 +81,11 @@ class WallpaperActionsCubit extends Cubit<WallpaperActionsState> {
           message: 'Couldn\'t set the wallpaper. Please try again.',
         ));
       }
+    } on UnsupportedError catch (e) {
+      emit(state.copyWith(
+        status: WallpaperActionStatus.failure,
+        message: e.message ?? 'Setting wallpaper is not supported on iOS. Use Save to Photos instead.',
+      ));
     } catch (_) {
       emit(state.copyWith(
         status: WallpaperActionStatus.failure,

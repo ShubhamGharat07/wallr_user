@@ -20,6 +20,7 @@ import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
 import 'features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
 import 'features/notification/domain/usecases/save_fcm_token_usecase.dart';
 import 'features/onboarding/presentation/bloc/onboarding_cubit.dart';
+import 'firebase_options.dart';
 final fcmService = FcmService();
 
 Future<void> main() async {
@@ -30,8 +31,16 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  await dotenv.load(fileName: '.env');
-  await Firebase.initializeApp();
+  // .env is optional on CI (asset may be missing). Cloudinary keys
+  // fall back to empty strings and remote images still load.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // No .env in bundle (e.g. simulator CI without secrets) – continue.
+  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await GoogleSignIn.instance.initialize(
     serverClientId:
         '853044061342-467iq899rtpjn4mfu24sejcipbh0dmqf.apps.googleusercontent.com',

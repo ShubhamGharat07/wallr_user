@@ -45,5 +45,35 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Photo library: required for saving wallpapers & permission_handler photos request -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wallr needs access to your photo library to save wallpapers.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Wallr needs permission to save wallpapers to your photo library.</string>
+	<!-- Firebase Messaging: background remote notifications -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<!-- Google Sign In: REVERSED_CLIENT_ID from GoogleService-Info.plist (set at runtime, placeholder). Required for GIDSignIn. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- Populated via GoogleService-Info.plist REVERSED_CLIENT_ID; com.googleusercontent.apps.* -->
+				<string>com.googleusercontent.apps.853044061342-467iq899rtpjn4mfu24sejcipbh0dmqf</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Allow deep links via wallr.app / custom scheme wallr:// -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
 </dict>
 </plist>
